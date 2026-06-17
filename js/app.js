@@ -439,6 +439,48 @@ function validateStep2() {
     return document.getElementById('calc-activity').value !== '';
 }
 
+// Recommend goal based on body fat %
+function getRecommendedGoal() {
+    var bf = parseFloat(document.getElementById('calc-bf').value);
+    if (!bf || bf <= 0) return null;
+    var sex = document.getElementById('calc-sex').value;
+    if (sex === 'male') {
+        if (bf > 20) return 'cut';
+        if (bf > 15) return 'recomp';
+        if (bf > 12) return 'maintain';
+        return 'bulk';
+    } else {
+        if (bf > 30) return 'cut';
+        if (bf > 25) return 'recomp';
+        if (bf > 20) return 'maintain';
+        return 'bulk';
+    }
+}
+
+function showGoalRecommendation() {
+    var recommended = getRecommendedGoal();
+    var recEl = document.getElementById('goal-recommendation');
+    // Remove previous recommended badges
+    document.querySelectorAll('.goal-card').forEach(function(c) { c.classList.remove('recommended'); });
+
+    if (!recommended) {
+        recEl.style.display = 'none';
+        return;
+    }
+
+    var bf = parseFloat(document.getElementById('calc-bf').value);
+    var sex = document.getElementById('calc-sex').value;
+    var sexLabel = sex === 'male' ? 'hombres' : 'mujeres';
+    var recLabel = goalLabels[recommended];
+    var msg = 'Con un <strong>' + bf + '% de grasa</strong> (' + sexLabel + '), te recomendamos: <strong>' + goalIcons[recommended] + ' ' + recLabel + '</strong>';
+    recEl.innerHTML = msg;
+    recEl.style.display = '';
+
+    // Highlight the recommended card
+    var recCard = document.querySelector('.goal-card[data-goal="' + recommended + '"]');
+    if (recCard) recCard.classList.add('recommended');
+}
+
 // Training toggle
 document.getElementById('calc-trains').addEventListener('change', function() {
     var details = document.getElementById('calc-training-details');
@@ -454,6 +496,7 @@ document.getElementById('next-1').addEventListener('click', function() {
 document.getElementById('back-2').addEventListener('click', function() { showStep(1); });
 document.getElementById('next-2').addEventListener('click', function() {
     if (!validateStep2()) { alert('Selecciona tu nivel de actividad diaria.'); return; }
+    showGoalRecommendation();
     showStep(3);
 });
 
@@ -679,7 +722,7 @@ document.addEventListener('click', function(e) {
 function saveAllState() {
     try {
         var calcData = {};
-        ['calc-sex','calc-age','calc-height','calc-weight','calc-activity','calc-trains','calc-train-type','calc-train-days','calc-train-duration','calc-train-intensity'].forEach(function(id) {
+        ['calc-sex','calc-age','calc-height','calc-weight','calc-bf','calc-activity','calc-trains','calc-train-type','calc-train-days','calc-train-duration','calc-train-intensity'].forEach(function(id) {
             var el = document.getElementById(id); if (el) calcData[id] = el.value;
         });
         localStorage.setItem('dietAppV2', JSON.stringify({

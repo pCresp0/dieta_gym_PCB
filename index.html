@@ -55,6 +55,16 @@
                             <input type="number" id="calc-weight" min="35" max="200" step="0.1" placeholder="80">
                         </div>
                     </div>
+                    <div class="calc-row">
+                        <div class="calc-field full-width">
+                            <label for="calc-bf">% Grasa corporal estimado <span class="label-optional">(opcional)</span></label>
+                            <div class="bf-input-wrapper">
+                                <input type="number" id="calc-bf" min="5" max="50" step="0.5" placeholder="Ej: 18">
+                                <span class="bf-unit">%</span>
+                            </div>
+                            <span class="calc-hint">Si no lo sabes, déjalo vacío. Se usará para recomendarte un objetivo.</span>
+                        </div>
+                    </div>
                 </div>
                 <button class="onboarding-next" id="next-1">Siguiente →</button>
             </div>
@@ -146,6 +156,7 @@
             <!-- STEP 3: Objetivo -->
             <div class="onboarding-step" id="step-3">
                 <h2 class="step-title">3. Tu objetivo</h2>
+                <p class="goal-recommendation" id="goal-recommendation" style="display:none;"></p>
                 <div class="goal-cards" id="goal-cards">
                     <div class="goal-card" data-goal="cut">
                         <span class="goal-icon">🔥</span>

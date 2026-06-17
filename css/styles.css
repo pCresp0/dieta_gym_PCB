@@ -1501,6 +1501,36 @@ body {
     color: var(--text-muted);
 }
 
+.label-optional {
+    font-weight: 400;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+}
+
+.bf-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.bf-input-wrapper input {
+    flex: 1;
+}
+
+.bf-unit {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.calc-hint {
+    display: block;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+    line-height: 1.4;
+}
+
 .calc-training-details {
     display: flex;
     flex-direction: column;
@@ -2200,6 +2230,7 @@ body {
     cursor: pointer;
     transition: all var(--transition);
     background: var(--card-bg);
+    position: relative;
 }
 
 .goal-card:hover {
@@ -2212,6 +2243,33 @@ body {
     border-color: var(--primary);
     background: var(--selected-bg);
     box-shadow: 0 0 0 1px var(--primary);
+}
+
+.goal-card.recommended::after {
+    content: '★ Recomendado';
+    position: absolute;
+    top: -8px;
+    right: 12px;
+    background: var(--accent);
+    color: #000;
+    font-size: 0.65rem;
+    font-weight: 800;
+    padding: 2px 8px;
+    border-radius: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.goal-recommendation {
+    background: rgba(212, 160, 23, 0.08);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    font-size: 0.82rem;
+    color: var(--text-primary);
+    margin-bottom: 14px;
+    line-height: 1.5;
+    text-align: center;
 }
 
 .goal-icon {
