@@ -2145,3 +2145,45 @@ body {
 .supplements-note strong {
     color: var(--text-primary);
 }
+
+/* ============================================================
+   TAB TOAST
+   ============================================================ */
+.tab-toast {
+    position: fixed;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    z-index: 1100;
+    padding: 10px 20px;
+    background: var(--surplus-bg);
+    border: 1px solid var(--surplus-color);
+    color: var(--surplus-color);
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    box-shadow: var(--shadow-md);
+    opacity: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    pointer-events: none;
+    white-space: nowrap;
+}
+
+.tab-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* ============================================================
+   NUTRITION MISSING
+   ============================================================ */
+.nutrition-missing {
+    padding: 8px 14px;
+    margin-bottom: 10px;
+    background: var(--maintenance-bg);
+    border: 1px solid var(--maintenance-color);
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    color: var(--maintenance-color);
+    line-height: 1.4;
+}

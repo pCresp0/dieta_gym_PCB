@@ -44,12 +44,20 @@ var dinnerProteins = [
 var extrasNutr = { verduras:[25,2,4,0.3], aceite:[900,0,0,100], fruta:[80,0.5,20,0.2] };
 
 var supplements = [
-    {icon:'💪',title:'Creatina',desc:'8g todos los días'},
+    {icon:'💪',title:'Creatina',desc:null},
     {icon:'🐟',title:'Omega 3',desc:'2 pastillas (1 desayuno + 1 comida)'},
     {icon:'🧲',title:'Magnesio',desc:'1 pastilla antes de dormir'},
     {icon:'⚡',title:'Zinc',desc:'1 pastilla antes de dormir'},
     {icon:'😴',title:'Melatonina',desc:'Opcional, para favorecer el descanso'}
 ];
+
+function getCreatineDose() {
+    var el = document.getElementById('calc-weight');
+    var w = el ? parseFloat(el.value) : 0;
+    if (!w || w < 40) return 5;
+    var dose = w / 10;
+    return (dose % 1 > 0.5) ? Math.ceil(dose) : Math.floor(dose);
+}
 
 var goalLabels = { cut:'Perder grasa', maintain:'Mantener peso', bulk:'Ganar masa muscular' };
 var goalIcons = { cut:'🔥', maintain:'⚖️', bulk:'💪' };
@@ -190,8 +198,11 @@ function renderMealTable(cid, cd, pd, cs, ps, mt) {
 }
 
 function renderSupplements() {
+    var creatineDose = getCreatineDose();
     document.getElementById('supplements-list').innerHTML = supplements.map(function(s) {
-        return '<div class="supplement-card"><span class="supplement-icon">'+s.icon+'</span><div class="supplement-text"><strong>'+s.title+'</strong>'+s.desc+'</div></div>';
+        var desc = s.desc;
+        if (s.title === 'Creatina') desc = creatineDose + 'g todos los días';
+        return '<div class="supplement-card"><span class="supplement-icon">'+s.icon+'</span><div class="supplement-text"><strong>'+s.title+'</strong>'+desc+'</div></div>';
     }).join('');
 }
 
@@ -252,7 +263,17 @@ function renderNutritionSummary() {
     if (selections.lunchCarb!==null||selections.lunchProtein!==null) meals.push('Almuerzo');
     if (selections.dinnerCarb!==null||selections.dinnerProtein!==null) meals.push('Cena');
     var complete = selections.breakfast!==null && selections.lunchCarb!==null && selections.lunchProtein!==null && selections.dinnerCarb!==null && selections.dinnerProtein!==null;
-    container.innerHTML = '<div class="nutrition-header"><h3>📊 Resumen Nutricional Estimado</h3><span class="nutrition-meals">'+meals.join(' + ')+(complete?'':' · Incompleto')+'</span></div>' +
+    var missingHtml = '';
+    if (!complete) {
+        var missingItems = [];
+        if (selections.breakfast === null) missingItems.push('Desayuno');
+        if (selections.lunchCarb === null) missingItems.push('Almuerzo: hidrato');
+        if (selections.lunchProtein === null) missingItems.push('Almuerzo: proteína');
+        if (selections.dinnerCarb === null) missingItems.push('Cena: hidrato');
+        if (selections.dinnerProtein === null) missingItems.push('Cena: proteína');
+        missingHtml = '<div class="nutrition-missing">⚠️ Falta: ' + missingItems.join(' · ') + '</div>';
+    }
+    container.innerHTML = '<div class="nutrition-header"><h3>📊 Resumen Nutricional Estimado</h3><span class="nutrition-meals">'+meals.join(' + ')+(complete?'':' · Incompleto')+'</span></div>' + missingHtml +
         '<div class="nutrition-body"><div class="nutrition-kcal"><span class="nutrition-kcal-number">'+kcal+'</span><span class="nutrition-kcal-unit">kcal</span></div>' +
         '<div class="nutrition-macros">' +
         '<div class="macro-bar-group"><div class="macro-info"><span class="macro-dot protein-dot"></span><span class="macro-name">Proteínas</span><strong>'+p+'g</strong><span class="macro-pct">'+pp+'%</span></div><div class="macro-bar"><div class="macro-bar-fill protein-fill" style="width:'+pp+'%"></div></div></div>' +
@@ -430,8 +451,45 @@ document.querySelectorAll('[data-toggle]').forEach(function(h) {
 });
 
 document.querySelectorAll('.main-tab').forEach(function(tab) {
-    tab.addEventListener('click', function() { activateTab(this.dataset.tab); });
+    tab.addEventListener('click', function() {
+        var target = this.dataset.tab;
+        var currentTab = document.querySelector('.main-tab.active');
+        var current = currentTab ? currentTab.dataset.tab : null;
+        if (current && current !== target) {
+            var warning = getTabIncompleteWarning(current);
+            if (warning) showTabToast(warning);
+        }
+        activateTab(target);
+    });
 });
+
+function getTabIncompleteWarning(tab) {
+    if (tab === 'breakfast' && selections.breakfast === null) return 'No has elegido desayuno';
+    if (tab === 'lunch') {
+        var missing = [];
+        if (selections.lunchCarb === null) missing.push('hidrato');
+        if (selections.lunchProtein === null) missing.push('proteína');
+        if (missing.length > 0) return 'Falta ' + missing.join(' y ') + ' en el almuerzo';
+    }
+    if (tab === 'dinner') {
+        var missing = [];
+        if (selections.dinnerCarb === null) missing.push('hidrato');
+        if (selections.dinnerProtein === null) missing.push('proteína');
+        if (missing.length > 0) return 'Falta ' + missing.join(' y ') + ' en la cena';
+    }
+    return null;
+}
+
+function showTabToast(msg) {
+    var existing = document.querySelector('.tab-toast');
+    if (existing) existing.remove();
+    var toast = document.createElement('div');
+    toast.className = 'tab-toast';
+    toast.innerHTML = '⚠️ ' + msg;
+    document.body.appendChild(toast);
+    setTimeout(function() { toast.classList.add('show'); }, 10);
+    setTimeout(function() { toast.classList.remove('show'); setTimeout(function() { toast.remove(); }, 300); }, 3000);
+}
 
 // Tooltip
 document.addEventListener('click', function(e) {
