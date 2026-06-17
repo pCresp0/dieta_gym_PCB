@@ -1548,6 +1548,10 @@ body {
 .random-diet-section {
     text-align: center;
     margin: 8px 0 4px;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
 }
 
 .random-diet-btn {

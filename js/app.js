@@ -860,6 +860,394 @@ function randomDiet() {
     }
 })();
 
+// ============================================================
+// WEEKLY DIET GENERATION & EXPORT
+// ============================================================
+var weeklyPlan = null; // stored after generation
+
+function generateWeeklyPlan() {
+    var days = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
+    var plan = [];
+    var usedBreakfast = [];
+    var usedLunchCarb = [];
+    var usedLunchProt = [];
+    var usedDinnerCarb = [];
+    var usedDinnerProt = [];
+
+    function pickRandom(arr, used, maxRepeat) {
+        // Try to avoid recent picks
+        var available = [];
+        for (var i = 0; i < arr.length; i++) {
+            var count = 0;
+            for (var j = 0; j < used.length; j++) { if (used[j] === i) count++; }
+            if (count < (maxRepeat || 1)) available.push(i);
+        }
+        if (available.length === 0) {
+            // All used at max, reset and pick any non-last
+            available = [];
+            for (var i = 0; i < arr.length; i++) {
+                if (used.length === 0 || i !== used[used.length - 1]) available.push(i);
+            }
+            if (available.length === 0) available = [0];
+        }
+        var pick = available[Math.floor(Math.random() * available.length)];
+        used.push(pick);
+        return pick;
+    }
+
+    // Max repeats: allow each item at most ceil(7/arrayLength) times
+    var bMax = Math.ceil(7 / breakfastOptions.length);
+    var lcMax = Math.ceil(7 / lunchCarbs.length);
+    var lpMax = Math.ceil(7 / lunchProteins.length);
+    var dcMax = Math.ceil(7 / dinnerCarbs.length);
+    var dpMax = Math.ceil(7 / dinnerProteins.length);
+
+    for (var d = 0; d < 7; d++) {
+        var sel = {
+            breakfast: pickRandom(breakfastOptions, usedBreakfast, bMax),
+            lunchCarb: pickRandom(lunchCarbs, usedLunchCarb, lcMax),
+            lunchProtein: pickRandom(lunchProteins, usedLunchProt, lpMax),
+            dinnerCarb: pickRandom(dinnerCarbs, usedDinnerCarb, dcMax),
+            dinnerProtein: pickRandom(dinnerProteins, usedDinnerProt, dpMax)
+        };
+        plan.push({ day: days[d], selections: sel });
+    }
+
+    // Also try to avoid same carb in lunch and dinner same day
+    for (var d = 0; d < 7; d++) {
+        if (lunchCarbs[plan[d].selections.lunchCarb].name === dinnerCarbs[plan[d].selections.dinnerCarb].name) {
+            // Try swapping dinner carb with another day
+            for (var other = 0; other < 7; other++) {
+                if (other !== d && lunchCarbs[plan[other].selections.lunchCarb].name !== dinnerCarbs[plan[d].selections.dinnerCarb].name
+                    && lunchCarbs[plan[d].selections.lunchCarb].name !== dinnerCarbs[plan[other].selections.dinnerCarb].name) {
+                    var tmp = plan[d].selections.dinnerCarb;
+                    plan[d].selections.dinnerCarb = plan[other].selections.dinnerCarb;
+                    plan[other].selections.dinnerCarb = tmp;
+                    break;
+                }
+            }
+        }
+    }
+
+    return plan;
+}
+
+function calcDayMacros(sel) {
+    var ratio = getRatio();
+    var t = { kcal: 0, protein: 0, carbs: 0, fat: 0 };
+
+    // Breakfast
+    var m = breakfastOptions[sel.breakfast].macros;
+    t.kcal += m[0] * ratio; t.protein += m[1] * ratio; t.carbs += m[2] * ratio; t.fat += m[3] * ratio;
+
+    function addFood(data, idx) {
+        var item = data[idx];
+        var grams = scaleAmount(item.base, ratio);
+        t.kcal += item.n[0] * grams / 100; t.protein += item.n[1] * grams / 100;
+        t.carbs += item.n[2] * grams / 100; t.fat += item.n[3] * grams / 100;
+    }
+
+    function addExtras() {
+        var vegG = scaleAmount(200, ratio);
+        t.kcal += extrasNutr.verduras[0] * vegG / 100; t.protein += extrasNutr.verduras[1] * vegG / 100;
+        t.carbs += extrasNutr.verduras[2] * vegG / 100; t.fat += extrasNutr.verduras[3] * vegG / 100;
+        var oilMl = scaleAmount(EXTRAS_OIL_ML, ratio);
+        t.kcal += extrasNutr.aceite[0] * oilMl / 100; t.fat += extrasNutr.aceite[3] * oilMl / 100;
+        t.kcal += extrasNutr.fruta[0]; t.protein += extrasNutr.fruta[1];
+        t.carbs += extrasNutr.fruta[2]; t.fat += extrasNutr.fruta[3];
+    }
+
+    addFood(lunchCarbs, sel.lunchCarb); addFood(lunchProteins, sel.lunchProtein); addExtras();
+    addFood(dinnerCarbs, sel.dinnerCarb); addFood(dinnerProteins, sel.dinnerProtein); addExtras();
+
+    return { kcal: Math.round(t.kcal), protein: Math.round(t.protein), carbs: Math.round(t.carbs), fat: Math.round(t.fat) };
+}
+
+function buildWeeklyExportCanvas(plan) {
+    var ratio = getRatio();
+    var bg = '#1B1F2E';
+    var cardBg = '#242838';
+    var accent = '#F0B840';
+    var textWhite = '#FFFFFF';
+    var textMuted = '#9CA3AF';
+    var textLight = '#D1D5DB';
+    var proteinColor = '#6366F1';
+    var carbsColor = '#F59E0B';
+    var fatColor = '#EF4444';
+
+    var W = 1080;
+    var pad = 40;
+    var contentW = W - pad * 2;
+
+    // Pre-compute all macros
+    var allMacros = plan.map(function(day) { return calcDayMacros(day.selections); });
+    var avgKcal = Math.round(allMacros.reduce(function(s, m) { return s + m.kcal; }, 0) / 7);
+    var avgP = Math.round(allMacros.reduce(function(s, m) { return s + m.protein; }, 0) / 7);
+    var avgC = Math.round(allMacros.reduce(function(s, m) { return s + m.carbs; }, 0) / 7);
+    var avgF = Math.round(allMacros.reduce(function(s, m) { return s + m.fat; }, 0) / 7);
+
+    // Calculate total height
+    var y = 0;
+    y += 100; // header
+    y += 20;
+    // summary card
+    y += 180;
+    y += 20;
+    // 7 day cards, each ~ 220px
+    for (var d = 0; d < 7; d++) {
+        y += 240 + 20;
+    }
+    y += 50; // footer
+
+    var H = y;
+
+    var canvas = document.createElement('canvas');
+    canvas.width = W;
+    canvas.height = H;
+    var ctx = canvas.getContext('2d');
+
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    function drawRoundRect(x, y, w, h, r) {
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.lineTo(x + w - r, y);
+        ctx.arcTo(x + w, y, x + w, y + r, r);
+        ctx.lineTo(x + w, y + h - r);
+        ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+        ctx.lineTo(x + r, y + h);
+        ctx.arcTo(x, y + h, x, y + h - r, r);
+        ctx.lineTo(x, y + r);
+        ctx.arcTo(x, y, x + r, y, r);
+        ctx.closePath();
+    }
+
+    function fillCard(x, y, w, h) {
+        drawRoundRect(x, y, w, h, 12);
+        ctx.fillStyle = cardBg;
+        ctx.fill();
+    }
+
+    function drawText(text, x, yPos, color, font) {
+        ctx.fillStyle = color || textWhite;
+        ctx.font = font || '20px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+        ctx.fillText(text, x, yPos);
+    }
+
+    // ---- HEADER ----
+    var grd = ctx.createLinearGradient(0, 0, W, 0);
+    grd.addColorStop(0, '#7A5A10');
+    grd.addColorStop(1, '#5A4005');
+    ctx.fillStyle = grd;
+    ctx.fillRect(0, 0, W, 90);
+
+    ctx.fillStyle = textWhite;
+    ctx.font = 'bold 32px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    ctx.fillText('📅 Mi Plan Semanal', pad, 52);
+
+    ctx.font = '18px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+    ctx.textAlign = 'right';
+    ctx.fillText(currentKcal + ' kcal/día objetivo', W - pad, 52);
+    ctx.textAlign = 'left';
+
+    var curY = 110;
+
+    // ---- WEEKLY SUMMARY CARD ----
+    var sumH = 160;
+    fillCard(pad, curY, contentW, sumH);
+
+    ctx.fillStyle = accent;
+    ctx.font = 'bold 22px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    ctx.fillText('Resumen Semanal', pad + 20, curY + 34);
+
+    // Average kcal big
+    ctx.fillStyle = textWhite;
+    ctx.font = 'bold 40px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    ctx.fillText(avgKcal + ' kcal', pad + 20, curY + 82);
+    ctx.fillStyle = textMuted;
+    ctx.font = '16px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    ctx.fillText('media diaria', pad + 20, curY + 104);
+
+    // Average macros
+    var macroStartX = pad + 400;
+    var macroItems = [
+        { label: 'Prot', value: avgP + 'g', color: proteinColor },
+        { label: 'Carbs', value: avgC + 'g', color: carbsColor },
+        { label: 'Grasas', value: avgF + 'g', color: fatColor }
+    ];
+    macroItems.forEach(function(mi, i) {
+        var mx = macroStartX + i * 200;
+        ctx.fillStyle = mi.color;
+        ctx.font = 'bold 30px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+        ctx.fillText(mi.value, mx, curY + 82);
+        ctx.fillStyle = textMuted;
+        ctx.font = '16px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+        ctx.fillText(mi.label, mx, curY + 104);
+    });
+
+    // Kcal range
+    var minKcal = Math.min.apply(null, allMacros.map(function(m) { return m.kcal; }));
+    var maxKcal = Math.max.apply(null, allMacros.map(function(m) { return m.kcal; }));
+    ctx.fillStyle = textMuted;
+    ctx.font = '15px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    ctx.fillText('Rango: ' + minKcal + ' – ' + maxKcal + ' kcal', pad + 20, curY + 140);
+
+    curY += sumH + 20;
+
+    // ---- DAY CARDS ----
+    for (var d = 0; d < 7; d++) {
+        var day = plan[d];
+        var sel = day.selections;
+        var mac = allMacros[d];
+        var dayH = 220;
+
+        fillCard(pad, curY, contentW, dayH);
+
+        // Day name + kcal
+        ctx.fillStyle = accent;
+        ctx.font = 'bold 22px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+        ctx.fillText(day.day, pad + 20, curY + 32);
+
+        ctx.fillStyle = textWhite;
+        ctx.font = 'bold 22px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText(mac.kcal + ' kcal', W - pad - 20, curY + 32);
+        ctx.textAlign = 'left';
+
+        // Macros row under header
+        var macY = curY + 52;
+        ctx.font = '15px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+        ctx.fillStyle = proteinColor; ctx.fillText('P: ' + mac.protein + 'g', pad + 20, macY);
+        ctx.fillStyle = carbsColor; ctx.fillText('C: ' + mac.carbs + 'g', pad + 140, macY);
+        ctx.fillStyle = fatColor; ctx.fillText('G: ' + mac.fat + 'g', pad + 260, macY);
+
+        // Meals
+        var mealY = curY + 80;
+        var bOpt = breakfastOptions[sel.breakfast];
+        var lc = lunchCarbs[sel.lunchCarb];
+        var lp = lunchProteins[sel.lunchProtein];
+        var dc = dinnerCarbs[sel.dinnerCarb];
+        var dp = dinnerProteins[sel.dinnerProtein];
+
+        // Breakfast
+        ctx.fillStyle = textMuted;
+        ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+        ctx.fillText('☀️ Desayuno', pad + 20, mealY);
+        ctx.fillStyle = textLight;
+        ctx.font = '16px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+        ctx.fillText(bOpt.name, pad + 150, mealY);
+
+        mealY += 32;
+        // Lunch
+        ctx.fillStyle = textMuted;
+        ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+        ctx.fillText('🍲 Almuerzo', pad + 20, mealY);
+        var lcScaled = scaleAmount(lc.base, ratio);
+        var lpScaled = scaleAmount(lp.base, ratio);
+        ctx.fillStyle = textLight;
+        ctx.font = '16px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+        ctx.fillText(lc.name + ' (' + lcScaled + 'g)  +  ' + lp.name + ' (' + lpScaled + (lp.unit || 'g') + ')', pad + 150, mealY);
+
+        mealY += 32;
+        // Extras
+        var vegG = scaleAmount(200, ratio);
+        var oilMl = scaleAmount(EXTRAS_OIL_ML, ratio);
+        ctx.fillStyle = textMuted;
+        ctx.font = '14px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+        ctx.fillText('+ ' + vegG + 'g verduras · ' + oilMl + 'ml aceite · 1 fruta (por comida)', pad + 150, mealY);
+
+        mealY += 32;
+        // Dinner
+        ctx.fillStyle = textMuted;
+        ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+        ctx.fillText('🌙 Cena', pad + 20, mealY);
+        var dcScaled = scaleAmount(dc.base, ratio);
+        var dpScaled = scaleAmount(dp.base, ratio);
+        ctx.fillStyle = textLight;
+        ctx.font = '16px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+        ctx.fillText(dc.name + ' (' + dcScaled + 'g)  +  ' + dp.name + ' (' + dpScaled + (dp.unit || 'g') + ')', pad + 150, mealY);
+
+        curY += dayH + 16;
+    }
+
+    // ---- FOOTER ----
+    curY += 10;
+    ctx.fillStyle = textMuted;
+    ctx.font = '14px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Generado con Mi Plan Nutricional  \u2022  pcresp0.github.io/dieta_gym_PCB', W / 2, curY);
+    ctx.textAlign = 'left';
+
+    // Trim canvas
+    var finalH = curY + 30;
+    var trimmed = document.createElement('canvas');
+    trimmed.width = W;
+    trimmed.height = finalH;
+    var tCtx = trimmed.getContext('2d');
+    tCtx.drawImage(canvas, 0, 0);
+
+    return trimmed;
+}
+
+function exportWeeklyDiet(format) {
+    if (!weeklyPlan) return;
+    var canvas = buildWeeklyExportCanvas(weeklyPlan);
+    var fileName = 'mi-plan-semanal';
+
+    if (format === 'pdf') {
+        exportAsPdf(canvas, fileName);
+    } else {
+        canvas.toBlob(function(blob) {
+            if (navigator.share && navigator.canShare) {
+                var file = new File([blob], fileName + '.png', { type: 'image/png' });
+                var shareData = { files: [file], title: 'Mi Plan Semanal' };
+                if (navigator.canShare(shareData)) {
+                    navigator.share(shareData).catch(function() { openBlobInNewTab(blob); });
+                    return;
+                }
+            }
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = fileName + '.png';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(function() { URL.revokeObjectURL(url); }, 5000);
+        }, 'image/png');
+    }
+}
+
+// Weekly button + modal
+(function() {
+    var btn = document.getElementById('weekly-diet-btn');
+    if (!btn) return;
+
+    btn.addEventListener('click', function() {
+        btn.classList.add('animating');
+        setTimeout(function() { btn.classList.remove('animating'); }, 500);
+        weeklyPlan = generateWeeklyPlan();
+        document.getElementById('weekly-export-modal').style.display = '';
+    });
+
+    document.getElementById('weekly-export-modal-cancel').addEventListener('click', function() {
+        document.getElementById('weekly-export-modal').style.display = 'none';
+    });
+    document.getElementById('weekly-export-modal').addEventListener('click', function(e) {
+        if (e.target === this) this.style.display = 'none';
+    });
+    document.getElementById('weekly-export-as-png').addEventListener('click', function() {
+        document.getElementById('weekly-export-modal').style.display = 'none';
+        exportWeeklyDiet('png');
+    });
+    document.getElementById('weekly-export-as-pdf').addEventListener('click', function() {
+        document.getElementById('weekly-export-modal').style.display = 'none';
+        exportWeeklyDiet('pdf');
+    });
+})();
+
 // Macro tooltips data
 var macroTooltips = {
     protein: {
@@ -1944,21 +2332,23 @@ function openBlobInNewTab(blob) {
     }
 }
 
-function exportAsPdf(canvas) {
+function exportAsPdf(canvas, fileName) {
+    var pdfName = fileName || 'mi-plan-nutricional';
     // Use canvas as a full-page image in a PDF via jsPDF
     var script = document.getElementById('jspdf-script');
     if (!script) {
         script = document.createElement('script');
         script.id = 'jspdf-script';
         script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
-        script.onload = function() { generatePdf(canvas); };
+        script.onload = function() { generatePdf(canvas, pdfName); };
         document.head.appendChild(script);
     } else {
-        generatePdf(canvas);
+        generatePdf(canvas, pdfName);
     }
 }
 
-function generatePdf(canvas) {
+function generatePdf(canvas, pdfName) {
+    pdfName = pdfName || 'mi-plan-nutricional';
     var jsPDF = window.jspdf.jsPDF;
     var imgData = canvas.toDataURL('image/png');
     var cW = canvas.width;
@@ -1979,7 +2369,7 @@ function generatePdf(canvas) {
     // Mobile: use share or open in new tab; Desktop: standard save
     if (navigator.share && navigator.canShare) {
         var pdfBlob = doc.output('blob');
-        var file = new File([pdfBlob], 'mi-plan-nutricional.pdf', { type: 'application/pdf' });
+        var file = new File([pdfBlob], pdfName + '.pdf', { type: 'application/pdf' });
         var shareData = { files: [file], title: 'Mi Plan Nutricional' };
         if (navigator.canShare(shareData)) {
             navigator.share(shareData).catch(function() {
@@ -1988,7 +2378,7 @@ function generatePdf(canvas) {
             return;
         }
     }
-    doc.save('mi-plan-nutricional.pdf');
+    doc.save(pdfName + '.pdf');
 }
 
 document.getElementById('export-btn').addEventListener('click', showExportModal);

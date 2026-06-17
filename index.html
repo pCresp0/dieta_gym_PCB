@@ -286,6 +286,7 @@
             <!-- RANDOM DIET BUTTON -->
             <div class="random-diet-section">
                 <button class="random-diet-btn" id="random-diet-btn">🎲 Dieta aleatoria</button>
+                <button class="random-diet-btn weekly-btn" id="weekly-diet-btn">📅 Dieta semanal</button>
             </div>
 
             <!-- TAB: DESAYUNO -->
@@ -356,6 +357,19 @@
                         <button class="export-option-btn" id="export-as-pdf">📄 Documento (PDF)</button>
                     </div>
                     <button class="export-modal-cancel" id="export-modal-cancel">Cancelar</button>
+                </div>
+            </div>
+
+            <!-- WEEKLY EXPORT FORMAT MODAL -->
+            <div class="export-modal-overlay" id="weekly-export-modal" style="display:none">
+                <div class="export-modal">
+                    <div class="export-modal-title">📅 Exportar dieta semanal</div>
+                    <p class="export-modal-desc">Se ha generado una dieta variada para toda la semana. ¿En qué formato quieres exportar?</p>
+                    <div class="export-modal-options">
+                        <button class="export-option-btn" id="weekly-export-as-png">🖼️ Imagen (PNG)</button>
+                        <button class="export-option-btn" id="weekly-export-as-pdf">📄 Documento (PDF)</button>
+                    </div>
+                    <button class="export-modal-cancel" id="weekly-export-modal-cancel">Cancelar</button>
                 </div>
             </div>
 
