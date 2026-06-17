@@ -952,7 +952,21 @@ document.getElementById('calc-steps-unknown').addEventListener('change', functio
 document.getElementById('calc-steps').addEventListener('input', function() {
     var hint = document.getElementById('steps-hint');
     var v = parseInt(this.value);
-    if (!v || v <= 0) { hint.textContent = ''; return; }
+    if (!v || v <= 0) { hint.textContent = ''; hint.classList.remove('steps-joke'); return; }
+    if (v > 50000) {
+        var jokes = [
+            '🚶‍♂️ ¿Haces el Camino de Santiago todos los días? Venga, pon los pasos reales 😄',
+            '🌍 ¿Estás dando la vuelta al mundo andando? Sé sincero/a conmigo 😂',
+            '🏃 Ni Forrest Gump hacía tantos pasos al día... ¡Ponme los de verdad!',
+            '📍 ¿Vives en un aeropuerto y no paras de caminar? Pon algo más realista 😅',
+            '🦶 50.000 pasos son unos 35-40km diarios... ¿Eres cartero en los Alpes? 🏔️'
+        ];
+        hint.innerHTML = jokes[Math.floor(Math.random() * jokes.length)];
+        hint.classList.add('steps-joke');
+        this.value = '';
+        return;
+    }
+    hint.classList.remove('steps-joke');
     var w = parseFloat(document.getElementById('calc-weight').value) || 70;
     var kcal = Math.round(v * 0.04 * (w / 70));
     hint.textContent = '~' + kcal + ' kcal extra al día por caminar';

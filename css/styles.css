@@ -2358,6 +2358,16 @@ body {
     margin-top: 8px;
 }
 
+.calc-hint.steps-joke {
+    color: #6c3483;
+    font-size: 0.72rem;
+    padding: 8px 10px;
+    background: rgba(108, 52, 131, 0.06);
+    border-radius: 6px;
+    border-left: 3px solid #6c3483;
+    margin-top: 8px;
+}
+
 .steps-input-wrapper {
     display: flex;
     align-items: center;
