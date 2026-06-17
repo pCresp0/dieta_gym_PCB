@@ -3,11 +3,13 @@
 // ============================================================
 const BASE_KCAL = 2500;
 
-// Template: {number} will be replaced with scaled value
+// Breakfast options
+// macros: [kcal, protein, carbs, fat] estimated at base 2500 kcal
 const breakfastOptions = [
     {
         id: 'yogur-qfb',
         name: 'Yogur de proteínas / QFB con cereales',
+        macros: [550, 42, 62, 14],
         items: [
             { text: 'Corn flakes / cereales sin azúcar', amount: 55, unit: 'g' },
             { text: 'Queso fresco batido', amount: 500, unit: 'g' },
@@ -18,6 +20,7 @@ const breakfastOptions = [
     {
         id: 'tostadas',
         name: 'Tostadas',
+        macros: [470, 28, 52, 17],
         items: [
             { text: 'Pan integral trigo/espelta/centeno', amount: 120, unit: 'g' },
             { text: 'Lomo', amount: 50, unit: 'g', extra: '+ {30}g queso semi/havarti light', extraBase: 30 },
@@ -27,6 +30,7 @@ const breakfastOptions = [
     {
         id: 'cereales-leche',
         name: 'Cereales con leche y proteína',
+        macros: [430, 33, 50, 13],
         items: [
             { text: 'Corn flakes / cereales sin azúcar', amount: 45, unit: 'g' },
             { text: 'Leche semi (un vaso)', amount: 200, unit: 'ml' },
@@ -37,6 +41,7 @@ const breakfastOptions = [
     {
         id: 'tortitas',
         name: 'Tortitas de avena',
+        macros: [340, 22, 30, 16],
         items: [
             { text: 'Harina de avena / copos de avena', amount: 45, unit: 'g' },
             { text: '2 Huevos + claras', amount: 100, unit: 'g' },
@@ -46,6 +51,7 @@ const breakfastOptions = [
     {
         id: 'yogures-proteicos',
         name: 'Yogures proteicos',
+        macros: [420, 25, 60, 8],
         items: [
             { text: '2 yogures proteicos LIDL', amount: null, unit: '' },
             { text: 'Cereales', amount: 15, unit: 'g' },
@@ -57,6 +63,7 @@ const breakfastOptions = [
     {
         id: 'bocadillo',
         name: 'Bocadillo de pollo/pavo y queso/guacamole',
+        macros: [520, 38, 55, 16],
         items: [
             { text: 'Pan integral trigo/espelta/centeno', amount: 120, unit: 'g' },
             { text: 'Pollo / Pavo', amount: 100, unit: 'g' },
@@ -65,55 +72,64 @@ const breakfastOptions = [
     }
 ];
 
+// n: [kcal, protein, carbs, fat] per 100g
 const lunchCarbs = [
-    { name: 'Arroz blanco', base: 130 },
-    { name: 'Patata boniato', base: 590, altName: 'Precongelada', altBase: 370 },
-    { name: 'Tortitas de arroz', base: 130 },
-    { name: 'Pasta', base: 130 },
-    { name: 'Pan', base: 180 },
-    { name: 'Quinoa', base: 130 },
-    { name: 'Cus-cus', base: 130 },
-    { name: 'Gnocchis de patata', base: 260 },
-    { name: 'Legumbres cocidas', base: 450 }
+    { name: 'Arroz blanco', base: 130, n: [130, 2.7, 28, 0.3] },
+    { name: 'Patata boniato', base: 590, altName: 'Precongelada', altBase: 370, n: [86, 1.6, 20, 0.1] },
+    { name: 'Tortitas de arroz', base: 130, n: [385, 7, 83, 3] },
+    { name: 'Pasta', base: 130, n: [360, 13, 72, 1.5] },
+    { name: 'Pan', base: 180, n: [265, 9, 49, 3.2] },
+    { name: 'Quinoa', base: 130, n: [368, 14, 64, 6] },
+    { name: 'Cus-cus', base: 130, n: [376, 12.8, 77, 0.6] },
+    { name: 'Gnocchis de patata', base: 260, n: [165, 4, 34, 1] },
+    { name: 'Legumbres cocidas', base: 450, n: [115, 8, 18, 0.8] }
 ];
 
 const lunchProteins = [
-    { name: 'Pollo', base: 200 },
-    { name: 'Pescado blanco', base: 250 },
-    { name: 'Salmón', base: 125 },
-    { name: 'Pavo', base: 220 },
-    { name: 'Hamburguesa de pollo', base: 180 },
-    { name: 'Huevo (2 completos) + claras', base: 100, unit: 'ml claras' },
-    { name: 'Lomo adobado', base: 200 },
-    { name: 'Ternera', base: 160 }
+    { name: 'Pollo', base: 200, n: [110, 23, 0, 1.5] },
+    { name: 'Pescado blanco', base: 250, n: [82, 18, 0, 0.8] },
+    { name: 'Salmón', base: 125, n: [208, 20, 0, 13] },
+    { name: 'Pavo', base: 220, n: [105, 24, 0, 1] },
+    { name: 'Hamburguesa de pollo', base: 180, n: [150, 17, 4, 7] },
+    { name: 'Huevo (2 completos) + claras', base: 100, unit: 'ml claras', n: [85, 11, 0.7, 4] },
+    { name: 'Lomo adobado', base: 200, n: [150, 20, 1, 7] },
+    { name: 'Ternera', base: 160, n: [155, 22, 0, 7] }
 ];
 
 const dinnerCarbs = [
-    { name: 'Arroz blanco', base: 100 },
-    { name: 'Patata boniato', base: 450, altName: 'Precongelada', altBase: 300 },
-    { name: 'Tortitas de arroz', base: 100 },
-    { name: 'Pasta', base: 100 },
-    { name: 'Pan', base: 140 },
-    { name: 'Quinoa', base: 100 },
-    { name: 'Cus-cus', base: 100 },
-    { name: 'Gnocchis de patata', base: 200 },
-    { name: 'Legumbres cocidas', base: 350 }
+    { name: 'Arroz blanco', base: 100, n: [130, 2.7, 28, 0.3] },
+    { name: 'Patata boniato', base: 450, altName: 'Precongelada', altBase: 300, n: [86, 1.6, 20, 0.1] },
+    { name: 'Tortitas de arroz', base: 100, n: [385, 7, 83, 3] },
+    { name: 'Pasta', base: 100, n: [360, 13, 72, 1.5] },
+    { name: 'Pan', base: 140, n: [265, 9, 49, 3.2] },
+    { name: 'Quinoa', base: 100, n: [368, 14, 64, 6] },
+    { name: 'Cus-cus', base: 100, n: [376, 12.8, 77, 0.6] },
+    { name: 'Gnocchis de patata', base: 200, n: [165, 4, 34, 1] },
+    { name: 'Legumbres cocidas', base: 350, n: [115, 8, 18, 0.8] }
 ];
 
 const dinnerProteins = [
-    { name: 'Pollo', base: 200 },
-    { name: 'Pescado blanco', base: 250 },
-    { name: 'Pavo', base: 220 },
-    { name: 'Hamburguesa de pollo', base: 180 },
-    { name: 'Huevo (2 yemas) + claras', base: 100, unit: 'ml claras' },
-    { name: 'Lomo adobado', base: 200 },
-    { name: 'Ternera', base: 160 }
+    { name: 'Pollo', base: 200, n: [110, 23, 0, 1.5] },
+    { name: 'Pescado blanco', base: 250, n: [82, 18, 0, 0.8] },
+    { name: 'Pavo', base: 220, n: [105, 24, 0, 1] },
+    { name: 'Hamburguesa de pollo', base: 180, n: [150, 17, 4, 7] },
+    { name: 'Huevo (2 yemas) + claras', base: 100, unit: 'ml claras', n: [85, 11, 0.7, 4] },
+    { name: 'Lomo adobado', base: 200, n: [150, 20, 1, 7] },
+    { name: 'Ternera', base: 160, n: [155, 22, 0, 7] }
 ];
+
+// Extras nutrition: [kcal, protein, carbs, fat] per 100g (aceite per 100ml)
+const extrasNutr = {
+    verduras: [25, 2, 4, 0.3],
+    aceite: [900, 0, 0, 100],
+    fruta: [80, 0.5, 20, 0.2]
+};
 
 const supplements = [
     { icon: '💪', title: 'Creatina', desc: '8g todos los días' },
     { icon: '🐟', title: 'Omega 3', desc: '2 pastillas (1 desayuno + 1 comida)' },
-    { icon: '🧲', title: 'Magnesio y Zinc', desc: '2 pastillas pre cama' },
+    { icon: '🧲', title: 'Magnesio', desc: '1 pastilla antes de dormir' },
+    { icon: '⚡', title: 'Zinc', desc: '1 pastilla antes de dormir' },
     { icon: '😴', title: 'Melatonina', desc: 'Opcional, para favorecer el descanso' }
 ];
 
@@ -138,9 +154,65 @@ function getRatio() {
 
 function scaleAmount(base, ratio) {
     if (base === null || base === undefined) return null;
-    const scaled = base * (ratio !== undefined ? ratio : getRatio());
+    var scaled = base * (ratio !== undefined ? ratio : getRatio());
     if (scaled < 10) return Math.round(scaled);
     return Math.round(scaled / 5) * 5;
+}
+
+// ============================================================
+// MACROS CALCULATION
+// ============================================================
+function calculateSelectedMacros() {
+    var ratio = getRatio();
+    var t = { kcal: 0, protein: 0, carbs: 0, fat: 0 };
+    var has = false;
+
+    // Breakfast
+    if (selections.breakfast !== null) {
+        has = true;
+        var m = breakfastOptions[selections.breakfast].macros;
+        t.kcal += m[0] * ratio;
+        t.protein += m[1] * ratio;
+        t.carbs += m[2] * ratio;
+        t.fat += m[3] * ratio;
+    }
+
+    function addFood(data, idx) {
+        if (idx === null) return;
+        has = true;
+        var item = data[idx];
+        var grams = scaleAmount(item.base, ratio);
+        t.kcal += item.n[0] * grams / 100;
+        t.protein += item.n[1] * grams / 100;
+        t.carbs += item.n[2] * grams / 100;
+        t.fat += item.n[3] * grams / 100;
+    }
+
+    function addExtras(hasCarb, hasProt) {
+        if (!hasCarb && !hasProt) return;
+        var vegG = scaleAmount(200, ratio);
+        t.kcal += extrasNutr.verduras[0] * vegG / 100;
+        t.protein += extrasNutr.verduras[1] * vegG / 100;
+        t.carbs += extrasNutr.verduras[2] * vegG / 100;
+        t.fat += extrasNutr.verduras[3] * vegG / 100;
+        var oilMl = scaleAmount(5, ratio);
+        t.kcal += extrasNutr.aceite[0] * oilMl / 100;
+        t.fat += extrasNutr.aceite[3] * oilMl / 100;
+        t.kcal += extrasNutr.fruta[0];
+        t.protein += extrasNutr.fruta[1];
+        t.carbs += extrasNutr.fruta[2];
+        t.fat += extrasNutr.fruta[3];
+    }
+
+    addFood(lunchCarbs, selections.lunchCarb);
+    addFood(lunchProteins, selections.lunchProtein);
+    addExtras(selections.lunchCarb !== null, selections.lunchProtein !== null);
+
+    addFood(dinnerCarbs, selections.dinnerCarb);
+    addFood(dinnerProteins, selections.dinnerProtein);
+    addExtras(selections.dinnerCarb !== null, selections.dinnerProtein !== null);
+
+    return has ? t : null;
 }
 
 // ============================================================
@@ -148,23 +220,23 @@ function scaleAmount(base, ratio) {
 // ============================================================
 
 function renderBreakfast() {
-    const grid = document.getElementById('breakfast-grid');
-    const ratio = getRatio();
+    var grid = document.getElementById('breakfast-grid');
+    var ratio = getRatio();
 
-    grid.innerHTML = breakfastOptions.map((option, idx) => {
-        const isSelected = selections.breakfast === idx;
-        const itemsHtml = option.items.map(item => {
-            const cls = item.isAlt ? ' class="alt-item"' : '';
-            let content = item.text;
+    grid.innerHTML = breakfastOptions.map(function(option, idx) {
+        var isSelected = selections.breakfast === idx;
+        var itemsHtml = option.items.map(function(item) {
+            var cls = item.isAlt ? ' class="alt-item"' : '';
+            var content = item.text;
 
             if (item.amount !== null) {
-                const scaled = scaleAmount(item.amount, ratio);
+                var scaled = scaleAmount(item.amount, ratio);
                 content += ': <span class="amount">' + scaled + item.unit + '</span>';
             }
 
             if (item.extra) {
-                const extraScaled = scaleAmount(item.extraBase, ratio);
-                const extraText = item.extra.replace(/\{(\d+)\}/, extraScaled);
+                var extraScaled = scaleAmount(item.extraBase, ratio);
+                var extraText = item.extra.replace(/\{(\d+)\}/, extraScaled);
                 content += ' <span style="color:#999">' + extraText + '</span>';
             }
 
@@ -179,20 +251,20 @@ function renderBreakfast() {
 }
 
 function renderMealTable(containerId, carbsData, proteinsData, carbSelection, proteinSelection, mealType) {
-    const container = document.getElementById(containerId);
-    const ratio = getRatio();
+    var container = document.getElementById(containerId);
+    var ratio = getRatio();
 
-    const carbsRows = carbsData.map((item, idx) => {
-        const isSelected = carbSelection === idx;
-        const scaled = scaleAmount(item.base, ratio);
-        const unit = item.unit || 'g';
-        let row = '<tr class="' + (isSelected ? 'selected' : '') + '" data-meal="' + mealType + '" data-type="carb" data-index="' + idx + '">' +
+    var carbsRows = carbsData.map(function(item, idx) {
+        var isSelected = carbSelection === idx;
+        var scaled = scaleAmount(item.base, ratio);
+        var unit = item.unit || 'g';
+        var row = '<tr class="' + (isSelected ? 'selected' : '') + '" data-meal="' + mealType + '" data-type="carb" data-index="' + idx + '">' +
             '<td>' + item.name + '</td>' +
             '<td>' + scaled + ' ' + unit + '</td>' +
             '</tr>';
 
         if (item.altName) {
-            const altScaled = scaleAmount(item.altBase, ratio);
+            var altScaled = scaleAmount(item.altBase, ratio);
             row += '<tr class="sub-row ' + (isSelected ? 'selected' : '') + '" data-meal="' + mealType + '" data-type="carb" data-index="' + idx + '">' +
                 '<td>' + item.altName + '</td>' +
                 '<td>' + altScaled + ' ' + unit + '</td>' +
@@ -201,10 +273,10 @@ function renderMealTable(containerId, carbsData, proteinsData, carbSelection, pr
         return row;
     }).join('');
 
-    const proteinRows = proteinsData.map((item, idx) => {
-        const isSelected = proteinSelection === idx;
-        const scaled = scaleAmount(item.base, ratio);
-        const unit = item.unit || 'g';
+    var proteinRows = proteinsData.map(function(item, idx) {
+        var isSelected = proteinSelection === idx;
+        var scaled = scaleAmount(item.base, ratio);
+        var unit = item.unit || 'g';
         return '<tr class="' + (isSelected ? 'selected' : '') + '" data-meal="' + mealType + '" data-type="protein" data-index="' + idx + '">' +
             '<td>' + item.name + '</td>' +
             '<td>' + scaled + ' ' + unit + '</td>' +
@@ -229,29 +301,104 @@ function renderMealTable(containerId, carbsData, proteinsData, carbSelection, pr
 }
 
 function renderSupplements() {
-    const list = document.getElementById('supplements-list');
-    list.innerHTML = supplements.map(s =>
-        '<div class="supplement-card">' +
+    var list = document.getElementById('supplements-list');
+    list.innerHTML = supplements.map(function(s) {
+        return '<div class="supplement-card">' +
             '<span class="supplement-icon">' + s.icon + '</span>' +
             '<div class="supplement-text">' +
                 '<strong>' + s.title + '</strong>' +
                 s.desc +
             '</div>' +
-        '</div>'
-    ).join('');
+        '</div>';
+    }).join('');
 }
 
 function updateExtras() {
-    const ratio = getRatio();
-    const vegScaled = scaleAmount(200, ratio);
-    const oilScaled = scaleAmount(5, ratio);
+    var ratio = getRatio();
+    var vegScaled = scaleAmount(200, ratio);
+    var oilScaled = scaleAmount(5, ratio);
 
-    document.querySelectorAll('.scaled-veg-lunch, .scaled-veg-dinner').forEach(el => {
+    document.querySelectorAll('.scaled-veg-lunch, .scaled-veg-dinner').forEach(function(el) {
         el.textContent = vegScaled;
     });
-    document.querySelectorAll('.scaled-oil-lunch, .scaled-oil-dinner').forEach(el => {
+    document.querySelectorAll('.scaled-oil-lunch, .scaled-oil-dinner').forEach(function(el) {
         el.textContent = oilScaled;
     });
+}
+
+function renderNutritionSummary() {
+    var container = document.getElementById('nutrition-summary');
+    var macros = calculateSelectedMacros();
+
+    if (!macros) {
+        container.innerHTML = '';
+        container.style.display = 'none';
+        return;
+    }
+
+    container.style.display = '';
+    var kcal = Math.round(macros.kcal);
+    var p = Math.round(macros.protein);
+    var c = Math.round(macros.carbs);
+    var f = Math.round(macros.fat);
+    var totalG = p + c + f;
+    var pPct = totalG > 0 ? Math.round(p / totalG * 100) : 0;
+    var cPct = totalG > 0 ? Math.round(c / totalG * 100) : 0;
+    var fPct = totalG > 0 ? 100 - pPct - cPct : 0;
+
+    var meals = [];
+    if (selections.breakfast !== null) meals.push('Desayuno');
+    if (selections.lunchCarb !== null || selections.lunchProtein !== null) meals.push('Almuerzo');
+    if (selections.dinnerCarb !== null || selections.dinnerProtein !== null) meals.push('Cena');
+
+    var complete = selections.breakfast !== null &&
+                   selections.lunchCarb !== null && selections.lunchProtein !== null &&
+                   selections.dinnerCarb !== null && selections.dinnerProtein !== null;
+
+    var pKcal = p * 4;
+    var cKcal = c * 4;
+    var fKcal = f * 9;
+    var fromMacros = pKcal + cKcal + fKcal;
+    var pKcalPct = fromMacros > 0 ? Math.round(pKcal / fromMacros * 100) : 0;
+    var cKcalPct = fromMacros > 0 ? Math.round(cKcal / fromMacros * 100) : 0;
+    var fKcalPct = fromMacros > 0 ? 100 - pKcalPct - cKcalPct : 0;
+
+    container.innerHTML =
+        '<div class="nutrition-header">' +
+            '<h3>📊 Resumen Nutricional Estimado</h3>' +
+            '<span class="nutrition-meals">' + meals.join(' + ') + (complete ? '' : ' · Incompleto') + '</span>' +
+        '</div>' +
+        '<div class="nutrition-body">' +
+            '<div class="nutrition-kcal">' +
+                '<span class="nutrition-kcal-number">' + kcal + '</span>' +
+                '<span class="nutrition-kcal-unit">kcal</span>' +
+            '</div>' +
+            '<div class="nutrition-ring">' +
+                '<div class="ring-segment ring-protein" style="--pct:' + pKcalPct + ';--offset:0">' +
+                    '<span class="ring-label">' + pKcalPct + '%</span>' +
+                '</div>' +
+                '<div class="ring-segment ring-carbs" style="--pct:' + cKcalPct + ';--offset:' + pKcalPct + '">' +
+                    '<span class="ring-label">' + cKcalPct + '%</span>' +
+                '</div>' +
+                '<div class="ring-segment ring-fat" style="--pct:' + fKcalPct + ';--offset:' + (pKcalPct + cKcalPct) + '">' +
+                    '<span class="ring-label">' + fKcalPct + '%</span>' +
+                '</div>' +
+            '</div>' +
+            '<div class="nutrition-macros">' +
+                '<div class="macro-bar-group">' +
+                    '<div class="macro-info"><span class="macro-dot protein-dot"></span><span class="macro-name">Proteínas</span><strong>' + p + 'g</strong><span class="macro-pct">' + pPct + '%</span></div>' +
+                    '<div class="macro-bar"><div class="macro-bar-fill protein-fill" style="width:' + pPct + '%"></div></div>' +
+                '</div>' +
+                '<div class="macro-bar-group">' +
+                    '<div class="macro-info"><span class="macro-dot carbs-dot"></span><span class="macro-name">Carbohidratos</span><strong>' + c + 'g</strong><span class="macro-pct">' + cPct + '%</span></div>' +
+                    '<div class="macro-bar"><div class="macro-bar-fill carbs-fill" style="width:' + cPct + '%"></div></div>' +
+                '</div>' +
+                '<div class="macro-bar-group">' +
+                    '<div class="macro-info"><span class="macro-dot fat-dot"></span><span class="macro-name">Grasas</span><strong>' + f + 'g</strong><span class="macro-pct">' + fPct + '%</span></div>' +
+                    '<div class="macro-bar"><div class="macro-bar-fill fat-fill" style="width:' + fPct + '%"></div></div>' +
+                '</div>' +
+            '</div>' +
+        '</div>';
 }
 
 function renderAll() {
@@ -260,6 +407,27 @@ function renderAll() {
     renderMealTable('dinner-tables', dinnerCarbs, dinnerProteins, selections.dinnerCarb, selections.dinnerProtein, 'dinner');
     renderSupplements();
     updateExtras();
+    renderNutritionSummary();
+}
+
+// ============================================================
+// TABS
+// ============================================================
+function activateTab(tabName) {
+    document.querySelectorAll('.main-tab').forEach(function(t) { t.classList.remove('active'); });
+    document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
+
+    var btn = document.querySelector('.main-tab[data-tab="' + tabName + '"]');
+    var panel = document.getElementById('tab-' + tabName);
+    if (btn) btn.classList.add('active');
+    if (panel) panel.classList.add('active');
+}
+
+function getDefaultTab() {
+    var hour = new Date().getHours();
+    if (hour < 11) return 'breakfast';
+    if (hour < 17) return 'lunch';
+    return 'dinner';
 }
 
 // ============================================================
@@ -291,23 +459,24 @@ document.getElementById('kcal-plus').addEventListener('click', function() {
 
 // Breakfast card selection
 document.getElementById('breakfast-grid').addEventListener('click', function(e) {
-    const card = e.target.closest('.breakfast-card');
+    var card = e.target.closest('.breakfast-card');
     if (!card) return;
-    const idx = parseInt(card.dataset.index);
+    var idx = parseInt(card.dataset.index);
     selections.breakfast = selections.breakfast === idx ? null : idx;
     renderBreakfast();
+    renderNutritionSummary();
     saveState();
 });
 
 // Meal table selection (lunch & dinner)
 document.addEventListener('click', function(e) {
-    const row = e.target.closest('tr[data-meal]');
+    var row = e.target.closest('tr[data-meal]');
     if (!row) return;
 
-    const meal = row.dataset.meal;
-    const type = row.dataset.type;
-    const idx = parseInt(row.dataset.index);
-    const key = meal === 'lunch'
+    var meal = row.dataset.meal;
+    var type = row.dataset.type;
+    var idx = parseInt(row.dataset.index);
+    var key = meal === 'lunch'
         ? (type === 'carb' ? 'lunchCarb' : 'lunchProtein')
         : (type === 'carb' ? 'dinnerCarb' : 'dinnerProtein');
 
@@ -318,39 +487,25 @@ document.addEventListener('click', function(e) {
     } else {
         renderMealTable('dinner-tables', dinnerCarbs, dinnerProteins, selections.dinnerCarb, selections.dinnerProtein, 'dinner');
     }
+    renderNutritionSummary();
     saveState();
 });
 
-// Section toggle
-document.querySelectorAll('[data-toggle]').forEach(header => {
+// Section toggle (supplements)
+document.querySelectorAll('[data-toggle]').forEach(function(header) {
     header.addEventListener('click', function(e) {
-        // Don't toggle if clicking a tooltip trigger
         if (e.target.closest('.tooltip-trigger')) return;
-        const section = this.dataset.toggle;
-        const body = document.getElementById(section + '-body') ||
-                     document.getElementById(section + 's-body');
-        if (body) {
-            body.classList.toggle('open');
-        }
+        var section = this.dataset.toggle;
+        var body = document.getElementById(section + '-body') ||
+                   document.getElementById(section + 's-body');
+        if (body) body.classList.toggle('open');
     });
 });
 
-// Meal tabs
-document.querySelectorAll('.meal-tab').forEach(tab => {
+// Main tabs
+document.querySelectorAll('.main-tab').forEach(function(tab) {
     tab.addEventListener('click', function() {
-        const target = this.dataset.mealTab;
-
-        // Update tab buttons
-        document.querySelectorAll('.meal-tab').forEach(t => t.classList.remove('active'));
-        this.classList.add('active');
-
-        // Update tab content
-        document.querySelectorAll('.meal-tab-content').forEach(c => c.classList.remove('active'));
-        const content = document.getElementById('tab-' + target);
-        if (content) content.classList.add('active');
-
-        // Save active tab
-        try { localStorage.setItem('dietAppTab', target); } catch(e) {}
+        activateTab(this.dataset.tab);
     });
 });
 
@@ -363,72 +518,64 @@ function saveState() {
             kcal: currentKcal,
             selections: selections
         }));
-    } catch (e) { /* ignore */ }
+    } catch (e) {}
 }
 
 function loadState() {
     try {
-        const saved = localStorage.getItem('dietApp');
+        var saved = localStorage.getItem('dietApp');
         if (saved) {
-            const data = JSON.parse(saved);
+            var data = JSON.parse(saved);
             if (data.kcal >= 1500 && data.kcal <= 3500) {
                 currentKcal = data.kcal;
             }
             if (data.selections) {
-                selections = { ...selections, ...data.selections };
+                selections = { breakfast: null, lunchCarb: null, lunchProtein: null, dinnerCarb: null, dinnerProtein: null };
+                Object.keys(data.selections).forEach(function(k) {
+                    if (k in selections) selections[k] = data.selections[k];
+                });
             }
         }
-    } catch (e) { /* ignore */ }
+    } catch (e) {}
 }
 
 // ============================================================
 // BMR / TDEE CALCULATOR
 // ============================================================
 
-// Tooltip content
-const tooltipData = {
+var tooltipData = {
     activity: {
         title: 'Factor de Actividad Diaria',
-        body: '<p>Este factor refleja tu gasto calórico por <strong>actividad diaria sin contar el entreno</strong> (NEAT: Non-Exercise Activity Thermogenesis).</p>' +
+        body: '<p>Este factor refleja tu gasto calórico por <strong>actividad diaria sin contar el entreno</strong> (NEAT).</p>' +
             '<ul>' +
-            '<li><strong>Sedentario (×1.2):</strong> Trabajo de oficina/sentado, poca actividad fuera de casa.</li>' +
-            '<li><strong>Ligeramente activo (×1.375):</strong> Trabajo de oficina pero caminas al trabajo, haces recados, etc.</li>' +
-            '<li><strong>Moderadamente activo (×1.55):</strong> Trabajo de pie (hostelería, comercio, profesor) o caminas &gt;10.000 pasos/día.</li>' +
-            '<li><strong>Muy activo (×1.725):</strong> Trabajo físico (construcción, mudanzas) o estás en movimiento todo el día.</li>' +
-            '</ul>' +
-            '<p>Este multiplicador se aplica sobre la TMB para obtener las calorías que gastas sin ejercicio planificado.</p>'
+            '<li><strong>Sedentario (x1.2):</strong> Trabajo de oficina/sentado.</li>' +
+            '<li><strong>Ligeramente activo (x1.375):</strong> Oficina pero caminas al trabajo, recados.</li>' +
+            '<li><strong>Moderadamente activo (x1.55):</strong> Trabajo de pie o caminas >10k pasos/dia.</li>' +
+            '<li><strong>Muy activo (x1.725):</strong> Trabajo fisico o en movimiento todo el dia.</li>' +
+            '</ul>'
     },
     bmr: {
         title: 'Tasa Metabólica Basal (TMB)',
-        body: '<p>La <strong>TMB</strong> (o BMR en inglés) son las calorías que tu cuerpo necesita <strong>en reposo absoluto</strong> para mantener funciones vitales: respirar, bombear sangre, regular temperatura, etc.</p>' +
-            '<p>Se calcula con la <strong>fórmula de Mifflin-St Jeor</strong>, la más precisa actualmente:</p>' +
-            '<p><strong>Hombres:</strong><br><code>TMB = (10 × peso kg) + (6.25 × altura cm) − (5 × edad) + 5</code></p>' +
-            '<p><strong>Mujeres:</strong><br><code>TMB = (10 × peso kg) + (6.25 × altura cm) − (5 × edad) − 161</code></p>' +
-            '<p>Es el mínimo calórico que consume tu cuerpo, <strong>sin contar ninguna actividad</strong>.</p>'
+        body: '<p>Calorías que tu cuerpo necesita <strong>en reposo absoluto</strong>.</p>' +
+            '<p>Formula de <strong>Mifflin-St Jeor</strong>:</p>' +
+            '<p><strong>Hombres:</strong> (10 x peso) + (6.25 x altura) - (5 x edad) + 5</p>' +
+            '<p><strong>Mujeres:</strong> (10 x peso) + (6.25 x altura) - (5 x edad) - 161</p>'
     },
     neat: {
         title: 'NEAT + Actividad Diaria',
-        body: '<p>El <strong>NEAT</strong> (Non-Exercise Activity Thermogenesis) es la energía gastada en actividades diarias que <strong>no son ejercicio planificado</strong>: caminar, estar de pie, gesticular, subir escaleras, etc.</p>' +
-            '<p>Se calcula multiplicando la TMB por el factor de actividad seleccionado:</p>' +
-            '<p><code>Calorías diarias = TMB × Factor de actividad</code></p>' +
-            '<p>Este valor representa las calorías que gastas en un día <strong>sin contar tus entrenamientos</strong>. Es útil para saber cuánto quemas en días de descanso.</p>'
+        body: '<p>Energía gastada en actividades diarias <strong>sin ejercicio planificado</strong>.</p>' +
+            '<p>Calorias diarias = TMB x Factor de actividad</p>' +
+            '<p>Util para saber cuanto quemas en dias de descanso.</p>'
     },
     tdee: {
         title: 'Gasto Energético Total (TDEE)',
-        body: '<p>El <strong>TDEE</strong> (Total Daily Energy Expenditure) es el total de calorías que quemas al día <strong>incluyendo el ejercicio</strong>.</p>' +
-            '<p>Se calcula sumando al NEAT las calorías extras quemadas por el entrenamiento:</p>' +
-            '<p><code>TDEE = NEAT + (Calorías entreno × días/semana ÷ 7)</code></p>' +
-            '<p>Las calorías de entreno se estiman según:</p>' +
-            '<ul>' +
-            '<li><strong>Tipo de entreno:</strong> Fuerza (~5-8 kcal/min), Cardio (~8-12 kcal/min), HIIT (~9-14 kcal/min), Mixto (~7-11 kcal/min)</li>' +
-            '<li><strong>Duración e intensidad</strong> de la sesión</li>' +
-            '</ul>' +
-            '<p>Si tu dieta está <strong>por debajo del TDEE</strong>, estás en <strong>déficit calórico</strong> (perder grasa). Si está por encima, en <strong>superávit</strong> (ganar peso).</p>'
+        body: '<p>Total de calorias que quemas al dia <strong>incluyendo el ejercicio</strong>.</p>' +
+            '<p>TDEE = NEAT + (Calorias entreno x dias/semana / 7)</p>' +
+            '<p>Si tu dieta esta por debajo del TDEE, estas en <strong>deficit calorico</strong>. Si esta por encima, en <strong>superavit</strong>.</p>'
     }
 };
 
-// Calorie burn per minute by training type and intensity [low, medium, high]
-const trainBurnPerMin = {
+var trainBurnPerMin = {
     strength: [5, 6.5, 8],
     cardio: [8, 10, 12],
     hiit: [9, 11.5, 14],
@@ -436,14 +583,13 @@ const trainBurnPerMin = {
 };
 
 function calculateBMR() {
-    const sex = document.getElementById('calc-sex').value;
-    const age = parseFloat(document.getElementById('calc-age').value);
-    const height = parseFloat(document.getElementById('calc-height').value);
-    const weight = parseFloat(document.getElementById('calc-weight').value);
+    var sex = document.getElementById('calc-sex').value;
+    var age = parseFloat(document.getElementById('calc-age').value);
+    var height = parseFloat(document.getElementById('calc-height').value);
+    var weight = parseFloat(document.getElementById('calc-weight').value);
 
     if (!age || !height || !weight) return null;
 
-    // Mifflin-St Jeor
     if (sex === 'male') {
         return (10 * weight) + (6.25 * height) - (5 * age) + 5;
     } else {
@@ -452,26 +598,25 @@ function calculateBMR() {
 }
 
 function calculateTDEE() {
-    const bmr = calculateBMR();
+    var bmr = calculateBMR();
     if (!bmr) return null;
 
-    const activityFactor = parseFloat(document.getElementById('calc-activity').value);
+    var activityFactor = parseFloat(document.getElementById('calc-activity').value);
     if (!activityFactor) return null;
 
-    const neat = bmr * activityFactor;
-
-    const trains = document.getElementById('calc-trains').value === 'yes';
-    let trainingExtra = 0;
+    var neat = bmr * activityFactor;
+    var trains = document.getElementById('calc-trains').value === 'yes';
+    var trainingExtra = 0;
 
     if (trains) {
-        const type = document.getElementById('calc-train-type').value;
-        const days = parseInt(document.getElementById('calc-train-days').value);
-        const duration = parseInt(document.getElementById('calc-train-duration').value);
-        const intensity = document.getElementById('calc-train-intensity').value;
+        var type = document.getElementById('calc-train-type').value;
+        var days = parseInt(document.getElementById('calc-train-days').value);
+        var duration = parseInt(document.getElementById('calc-train-duration').value);
+        var intensity = document.getElementById('calc-train-intensity').value;
 
-        const intensityIdx = intensity === 'low' ? 0 : intensity === 'medium' ? 1 : 2;
-        const burnPerMin = trainBurnPerMin[type][intensityIdx];
-        const sessionCals = burnPerMin * duration;
+        var intensityIdx = intensity === 'low' ? 0 : intensity === 'medium' ? 1 : 2;
+        var burnPerMin = trainBurnPerMin[type][intensityIdx];
+        var sessionCals = burnPerMin * duration;
         trainingExtra = (sessionCals * days) / 7;
     }
 
@@ -479,8 +624,8 @@ function calculateTDEE() {
 }
 
 function updateCalculatorResults() {
-    const result = calculateTDEE();
-    const resultsDiv = document.getElementById('calc-results');
+    var result = calculateTDEE();
+    var resultsDiv = document.getElementById('calc-results');
 
     if (!result) {
         resultsDiv.style.display = 'none';
@@ -492,18 +637,16 @@ function updateCalculatorResults() {
     document.getElementById('result-neat').textContent = result.neat;
     document.getElementById('result-tdee').textContent = result.tdee;
 
-    // Balance calculation
-    const diff = currentKcal - result.tdee;
-    const pct = diff / result.tdee * 100;
+    var diff = currentKcal - result.tdee;
+    var pct = diff / result.tdee * 100;
 
-    const marker = document.getElementById('balance-bar-marker');
-    // Map diff to position: -30% = 0%, 0% = 50%, +30% = 100%
-    const pos = Math.max(0, Math.min(100, 50 + (pct / 30 * 50)));
+    var marker = document.getElementById('balance-bar-marker');
+    var pos = Math.max(0, Math.min(100, 50 + (pct / 30 * 50)));
     marker.style.left = pos + '%';
 
-    const verdict = document.getElementById('balance-verdict');
+    var verdict = document.getElementById('balance-verdict');
     if (diff < -100) {
-        const absDiff = Math.abs(diff);
+        var absDiff = Math.abs(diff);
         verdict.className = 'balance-verdict deficit';
         verdict.innerHTML = '📉 <strong>Déficit de ' + absDiff + ' kcal/día</strong> (' + Math.abs(pct).toFixed(1) + '%) — Ideal para perder grasa';
     } else if (diff > 100) {
@@ -517,10 +660,9 @@ function updateCalculatorResults() {
     saveCalcState();
 }
 
-// Toggle training details visibility
 function toggleTrainingDetails() {
-    const trains = document.getElementById('calc-trains').value === 'yes';
-    const details = document.getElementById('calc-training-details');
+    var trains = document.getElementById('calc-trains').value === 'yes';
+    var details = document.getElementById('calc-training-details');
     if (trains) {
         details.classList.remove('hidden');
     } else {
@@ -529,9 +671,8 @@ function toggleTrainingDetails() {
     updateCalculatorResults();
 }
 
-// Tooltip handlers
 function openTooltip(key) {
-    const data = tooltipData[key];
+    var data = tooltipData[key];
     if (!data) return;
     document.getElementById('tooltip-title').textContent = data.title;
     document.getElementById('tooltip-body').innerHTML = data.body;
@@ -542,21 +683,18 @@ function closeTooltip() {
     document.getElementById('tooltip-overlay').style.display = 'none';
 }
 
-// Calculator event listeners
 document.addEventListener('click', function(e) {
-    const trigger = e.target.closest('.tooltip-trigger');
+    var trigger = e.target.closest('.tooltip-trigger');
     if (trigger) {
         e.preventDefault();
         e.stopPropagation();
         openTooltip(trigger.dataset.tooltip);
         return;
     }
-
     if (e.target.id === 'tooltip-overlay') {
         closeTooltip();
         return;
     }
-
     if (e.target.id === 'tooltip-close' || e.target.closest('#tooltip-close')) {
         closeTooltip();
         return;
@@ -565,7 +703,7 @@ document.addEventListener('click', function(e) {
 
 ['calc-sex', 'calc-age', 'calc-height', 'calc-weight', 'calc-activity',
  'calc-trains', 'calc-train-type', 'calc-train-days', 'calc-train-duration', 'calc-train-intensity'].forEach(function(id) {
-    const el = document.getElementById(id);
+    var el = document.getElementById(id);
     if (el) {
         el.addEventListener('change', function() {
             if (id === 'calc-trains') {
@@ -580,33 +718,30 @@ document.addEventListener('click', function(e) {
     }
 });
 
-// Save/load calculator state
 function saveCalcState() {
     try {
-        const calcData = {};
+        var calcData = {};
         ['calc-sex', 'calc-age', 'calc-height', 'calc-weight', 'calc-activity',
          'calc-trains', 'calc-train-type', 'calc-train-days', 'calc-train-duration', 'calc-train-intensity'].forEach(function(id) {
-            const el = document.getElementById(id);
+            var el = document.getElementById(id);
             if (el) calcData[id] = el.value;
         });
         localStorage.setItem('dietAppCalc', JSON.stringify(calcData));
-    } catch (e) { /* ignore */ }
+    } catch (e) {}
 }
 
 function loadCalcState() {
     try {
-        const saved = localStorage.getItem('dietAppCalc');
+        var saved = localStorage.getItem('dietAppCalc');
         if (saved) {
-            const data = JSON.parse(saved);
+            var data = JSON.parse(saved);
             Object.keys(data).forEach(function(id) {
-                const el = document.getElementById(id);
-                if (el && data[id]) {
-                    el.value = data[id];
-                }
+                var el = document.getElementById(id);
+                if (el && data[id]) el.value = data[id];
             });
             toggleTrainingDetails();
         }
-    } catch (e) { /* ignore */ }
+    } catch (e) {}
 }
 
 // ============================================================
@@ -620,14 +755,8 @@ function init() {
     renderAll();
     updateCalculatorResults();
 
-    // Restore saved tab
-    try {
-        const savedTab = localStorage.getItem('dietAppTab');
-        if (savedTab) {
-            const tabBtn = document.querySelector('.meal-tab[data-meal-tab="' + savedTab + '"]');
-            if (tabBtn) tabBtn.click();
-        }
-    } catch(e) {}
+    // Auto-select tab based on time of day
+    activateTab(getDefaultTab());
 }
 
 document.addEventListener('DOMContentLoaded', init);

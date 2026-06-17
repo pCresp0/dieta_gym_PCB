@@ -32,31 +32,50 @@
 
     <main class="main">
 
-        <section class="info-banner">
-            <div class="info-item">
-                <span class="info-icon">🎯</span>
-                <div>
-                    <span class="info-label">Objetivo</span>
-                    <span class="info-value">Mejorar % de grasa</span>
-                </div>
+        <!-- NAVEGACIÓN PRINCIPAL -->
+        <nav class="main-tabs-nav">
+            <div class="main-tabs">
+                <button class="main-tab" data-tab="planning">
+                    <span class="tab-icon">📊</span>
+                    <span class="tab-label">Planificación</span>
+                </button>
+                <button class="main-tab" data-tab="breakfast">
+                    <span class="tab-icon">☀️</span>
+                    <span class="tab-label">Desayuno</span>
+                </button>
+                <button class="main-tab" data-tab="lunch">
+                    <span class="tab-icon">🍲</span>
+                    <span class="tab-label">Almuerzo</span>
+                </button>
+                <button class="main-tab" data-tab="dinner">
+                    <span class="tab-icon">🌙</span>
+                    <span class="tab-label">Cena</span>
+                </button>
             </div>
-            <div class="info-item">
-                <span class="info-icon">🚶</span>
-                <div>
-                    <span class="info-label">NEAT</span>
-                    <span class="info-value">10-12k pasos/día</span>
-                </div>
-            </div>
-        </section>
+        </nav>
 
-        <!-- CALCULADORA TDEE -->
-        <section class="meal-section calculator-section" id="calculator-section">
-            <div class="section-header" data-toggle="calculator">
-                <h2><span class="section-icon">🔥</span> Calculadora de Gasto Calórico (TDEE)</h2>
-                <p class="section-subtitle">Calcula tus calorías de mantenimiento y compara con tu dieta actual.</p>
-                <span class="toggle-icon">▼</span>
-            </div>
-            <div class="section-body open" id="calculator-body">
+        <!-- TAB: PLANIFICACIÓN -->
+        <div class="tab-panel" id="tab-planning">
+            <section class="info-banner">
+                <div class="info-item">
+                    <span class="info-icon">🎯</span>
+                    <div>
+                        <span class="info-label">Objetivo</span>
+                        <span class="info-value">Mejorar % de grasa</span>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <span class="info-icon">🚶</span>
+                    <div>
+                        <span class="info-label">NEAT</span>
+                        <span class="info-value">10-12k pasos/día</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="calc-panel">
+                <h2 class="calc-panel-title"><span class="section-icon">🔥</span> Calculadora TDEE</h2>
+                <p class="calc-panel-subtitle">Calcula tus calorías de mantenimiento y compara con tu dieta actual.</p>
                 <div class="calc-container">
                     <div class="calc-form">
                         <div class="calc-row">
@@ -90,10 +109,10 @@
                                 </label>
                                 <select id="calc-activity">
                                     <option value="">-- Selecciona --</option>
-                                    <option value="1.2">Sedentario · Trabajo de oficina, poco movimiento</option>
-                                    <option value="1.375">Ligeramente activo · Trabajo de oficina + caminas algo</option>
-                                    <option value="1.55">Moderadamente activo · Trabajo de pie o caminas bastante</option>
-                                    <option value="1.725">Muy activo · Trabajo físico o estás en movimiento todo el día</option>
+                                    <option value="1.2">Sedentario · Oficina, poco movimiento</option>
+                                    <option value="1.375">Ligeramente activo · Oficina + caminas algo</option>
+                                    <option value="1.55">Moderadamente activo · Trabajo de pie / caminas bastante</option>
+                                    <option value="1.725">Muy activo · Trabajo físico / movimiento todo el día</option>
                                 </select>
                             </div>
                         </div>
@@ -154,7 +173,6 @@
                         </div>
                     </div>
 
-                    <!-- RESULTADOS -->
                     <div class="calc-results" id="calc-results" style="display:none;">
                         <div class="calc-results-grid">
                             <div class="calc-result-card bmr-card">
@@ -199,7 +217,6 @@
                         </div>
                     </div>
 
-                    <!-- TOOLTIP MODAL -->
                     <div class="tooltip-overlay" id="tooltip-overlay" style="display:none;">
                         <div class="tooltip-modal">
                             <div class="tooltip-modal-header">
@@ -210,56 +227,43 @@
                         </div>
                     </div>
                 </div>
-            </div>
-        </section>
+            </section>
+        </div>
 
-        <!-- PESTAÑAS DE COMIDAS -->
-        <section class="meal-section meals-tabbed-section" id="meals-section">
-            <div class="meal-tabs">
-                <button class="meal-tab active" data-meal-tab="breakfast">
-                    <span class="tab-icon">☀️</span>
-                    <span class="tab-label">Desayuno</span>
-                </button>
-                <button class="meal-tab" data-meal-tab="lunch">
-                    <span class="tab-icon">🍲</span>
-                    <span class="tab-label">Almuerzo</span>
-                </button>
-                <button class="meal-tab" data-meal-tab="dinner">
-                    <span class="tab-icon">🌙</span>
-                    <span class="tab-label">Cena</span>
-                </button>
-            </div>
-
-            <!-- TAB: DESAYUNO -->
-            <div class="meal-tab-content active" id="tab-breakfast">
+        <!-- TAB: DESAYUNO -->
+        <div class="tab-panel" id="tab-breakfast">
+            <div class="meal-card">
                 <div class="tab-subtitle">
                     Elige una opción. Se puede acompañar con café o infusión.
                 </div>
                 <div class="breakfast-grid" id="breakfast-grid"></div>
             </div>
+        </div>
 
-            <!-- TAB: ALMUERZO -->
-            <div class="meal-tab-content" id="tab-lunch">
-                <div class="tab-subtitle">
-                    Elige un hidrato y una proteína.
-                </div>
+        <!-- TAB: ALMUERZO -->
+        <div class="tab-panel" id="tab-lunch">
+            <div class="meal-card">
+                <div class="tab-subtitle">Elige un hidrato y una proteína.</div>
                 <div class="extras-banner">
                     <span>+ ~<span class="scaled-veg-lunch">200</span>g verduras (verdes) &nbsp;|&nbsp; <span class="scaled-oil-lunch">5</span>ml aceite oliva &nbsp;|&nbsp; 1 fruta</span>
                 </div>
                 <div class="meal-tables" id="lunch-tables"></div>
             </div>
+        </div>
 
-            <!-- TAB: CENA -->
-            <div class="meal-tab-content" id="tab-dinner">
-                <div class="tab-subtitle">
-                    Elige un hidrato y una proteína.
-                </div>
+        <!-- TAB: CENA -->
+        <div class="tab-panel" id="tab-dinner">
+            <div class="meal-card">
+                <div class="tab-subtitle">Elige un hidrato y una proteína.</div>
                 <div class="extras-banner">
                     <span>+ ~<span class="scaled-veg-dinner">200</span>g verduras (verdes) &nbsp;|&nbsp; <span class="scaled-oil-dinner">5</span>ml aceite oliva &nbsp;|&nbsp; 1 fruta</span>
                 </div>
                 <div class="meal-tables" id="dinner-tables"></div>
             </div>
-        </section>
+        </div>
+
+        <!-- RESUMEN NUTRICIONAL -->
+        <section class="nutrition-summary" id="nutrition-summary"></section>
 
         <!-- SUPLEMENTACIÓN -->
         <section class="meal-section supplements-section">
@@ -275,7 +279,7 @@
         <!-- DISCLAIMER -->
         <div class="disclaimer">
             <span class="disclaimer-icon">⚠️</span>
-            <p>Esta herramienta es <strong>orientativa</strong>. Las cantidades, cálculos de metabolismo basal y gasto calórico son estimaciones. Consulta siempre con un <strong>médico y/o nutricionista</strong> antes de iniciar o modificar cualquier plan de alimentación.</p>
+            <p>Esta herramienta es <strong>orientativa</strong>. Las cantidades y los macros mostrados son <strong>estimaciones</strong>. Consulta siempre con un <strong>médico y/o nutricionista</strong> antes de iniciar o modificar cualquier plan de alimentación.</p>
         </div>
 
     </main>
