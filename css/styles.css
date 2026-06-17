@@ -1862,6 +1862,21 @@ body {
     font-size: 0.66rem;
 }
 
+.disclaimer a,
+.disclaimer-block a,
+.ob-tip-text a {
+    color: var(--accent);
+    text-decoration: underline;
+    text-decoration-style: dotted;
+    text-underline-offset: 2px;
+}
+
+.disclaimer a:hover,
+.disclaimer-block a:hover,
+.ob-tip-text a:hover {
+    text-decoration-style: solid;
+}
+
 .disclaimer-warning {
     background: rgba(255, 152, 0, 0.06);
     border-radius: var(--radius-sm);
