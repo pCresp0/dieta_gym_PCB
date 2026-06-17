@@ -477,86 +477,157 @@ body {
 
 /* ========== INFO BANNER ========== */
 .info-banner {
-    display: flex;
-    gap: 10px;
     margin-bottom: 16px;
-    flex-wrap: wrap;
 }
 
-.info-item {
-    flex: 1;
-    min-width: 140px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
+.info-banner-card {
     background: var(--card-bg);
-    padding: 12px 14px;
     border-radius: var(--radius-sm);
     border: 1px solid var(--border);
     box-shadow: var(--shadow-sm);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
 }
 
-.info-icon {
-    font-size: 1.4rem;
-}
-
-.info-label {
+.info-banner-goal {
     display: flex;
     align-items: center;
-    gap: 4px;
-    font-size: 0.68rem;
-    color: var(--text-muted);
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-}
-
-.info-tip-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 15px;
-    height: 15px;
-    border-radius: 50%;
-    border: 1px solid var(--text-muted);
-    background: transparent;
-    color: var(--text-muted);
-    font-size: 0.55rem;
-    font-weight: 700;
-    font-style: italic;
+    gap: 8px;
     cursor: pointer;
-    padding: 0;
-    line-height: 1;
-    transition: all var(--transition);
-    font-family: serif;
+    padding: 8px 12px;
+    border-radius: var(--radius-xs);
+    background: rgba(212, 160, 23, 0.08);
+    border: 1px dashed var(--accent);
+    transition: background var(--transition);
+    align-self: flex-start;
 }
 
-.info-tip-btn:hover {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: #fff;
+.info-banner-goal:hover {
+    background: rgba(212, 160, 23, 0.15);
 }
 
-.info-value {
-    display: block;
-    font-size: 0.88rem;
+.info-goal-icon {
+    font-size: 1.2rem;
+}
+
+.info-goal-text {
+    font-size: 0.85rem;
     font-weight: 600;
-    color: var(--text-primary);
-}
-
-.info-value-clickable {
-    cursor: pointer;
-    border-bottom: 1px dashed var(--text-muted);
-    padding-bottom: 1px;
-    transition: color var(--transition);
-}
-
-.info-value-clickable:hover {
     color: var(--accent);
 }
 
-.info-item-goal {
+.info-banner-metrics {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: center;
+}
+
+.info-metric {
+    flex: 1;
+    text-align: center;
+    padding: 10px 8px;
+    border-radius: var(--radius-xs);
+    background: var(--bg);
+    border: 1px solid var(--border);
+}
+
+.info-metric-label {
+    display: block;
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 4px;
+}
+
+.info-metric-value {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1.1;
+}
+
+.info-metric-sub {
+    display: block;
+    font-size: 0.62rem;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+.info-metric-highlight {
+    border-color: var(--accent);
+    background: rgba(212, 160, 23, 0.06);
+}
+
+.info-metric-highlight .info-metric-value {
+    color: var(--accent);
+}
+
+.info-metric-arrow {
+    font-size: 1.2rem;
+    flex-shrink: 0;
+    opacity: 0.7;
+}
+
+.info-diff {
+    display: block;
+    text-align: center;
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 6px 10px;
+    border-radius: var(--radius-xs);
+}
+
+.info-diff-pct {
+    font-weight: 500;
+    opacity: 0.8;
+}
+
+.info-diff.deficit {
+    color: #e8a735;
+    background: rgba(232, 167, 53, 0.1);
+}
+
+.info-diff.surplus {
+    color: #4ecdc4;
+    background: rgba(78, 205, 196, 0.1);
+}
+
+.info-diff.maintain {
+    color: var(--text-secondary);
+    background: rgba(128, 128, 128, 0.08);
+}
+
+.info-banner-explain {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    text-align: center;
+    padding: 0 4px;
+}
+
+.info-whatis-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    padding: 6px 14px;
+    border-radius: var(--radius-xs);
     cursor: pointer;
+    transition: all var(--transition);
+    align-self: center;
+    font-weight: 600;
+}
+
+.info-whatis-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(212, 160, 23, 0.05);
 }
 
 /* Goal Picker in tooltip */
@@ -1929,32 +2000,36 @@ body {
     }
 
     .info-banner {
-        flex-direction: column;
-        gap: 8px;
         margin-bottom: 12px;
     }
 
-    .info-item {
-        min-width: 0;
-        padding: 12px 14px;
-        gap: 10px;
-        overflow: hidden;
+    .info-banner-card {
+        padding: 14px 12px;
+        gap: 12px;
     }
 
-    .info-icon {
+    .info-banner-metrics {
+        gap: 6px;
+    }
+
+    .info-metric {
+        padding: 8px 6px;
+    }
+
+    .info-metric-value {
         font-size: 1.3rem;
-        flex-shrink: 0;
     }
 
-    .info-label {
-        font-size: 0.62rem;
+    .info-metric-label {
+        font-size: 0.6rem;
     }
 
-    .info-value {
-        font-size: 0.85rem;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+    .info-metric-sub {
+        font-size: 0.58rem;
+    }
+
+    .info-banner-explain {
+        font-size: 0.74rem;
     }
 
     .extras-banner {

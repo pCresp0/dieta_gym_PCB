@@ -217,53 +217,70 @@ function renderInfoBanner() {
     var el = document.getElementById('info-banner');
     if (!userGoal || !userTdee) { el.innerHTML = ''; return; }
 
-    var goalExplanations = {
-        cut: 'Perder grasa corporal manteniendo masa muscular. Requiere comer por debajo de tu gasto calórico (déficit).',
-        recomp: 'Ganar músculo y perder grasa a la vez. Requiere déficit mínimo, alta proteína y entreno de fuerza.',
-        maintain: 'Mantener tu peso y composición corporal actuales. Comes a tu nivel de gasto.',
-        bulk: 'Ganar masa muscular. Requiere comer por encima de tu gasto calórico (superávit controlado).'
-    };
-    var recExplanations = {
-        cut: 'Déficit del ~20% sobre tu TDEE. Suficiente para perder grasa sin pasar hambre ni perder músculo.',
-        recomp: 'Déficit mínimo del ~5% sobre tu TDEE. Permite ganar músculo mientras pierdes grasa lentamente.',
-        maintain: 'Igual a tu TDEE. Tu peso se mantendrá estable.',
-        bulk: 'Superávit del ~15% sobre tu TDEE. Suficiente para ganar músculo con mínima grasa extra.'
+    var diff = recommendedKcal - userTdee;
+    var absDiff = Math.abs(diff);
+    var pctDiff = Math.abs(Math.round(diff / userTdee * 100));
+
+    var goalDescs = {
+        cut: 'Comes por debajo de lo que quemas para <strong>perder grasa</strong> manteniendo músculo.',
+        recomp: 'Comes ligeramente por debajo de lo que quemas para <strong>ganar músculo y perder grasa</strong> a la vez.',
+        maintain: 'Comes lo mismo que quemas para <strong>mantener tu peso</strong> y composición corporal.',
+        bulk: 'Comes por encima de lo que quemas para <strong>ganar masa muscular</strong> con mínima grasa.'
     };
 
+    var diffLabel = '';
+    if (diff < 0) {
+        diffLabel = '<span class="info-diff deficit">−' + absDiff + ' kcal/día <span class="info-diff-pct">(déficit ~' + pctDiff + '%)</span></span>';
+    } else if (diff > 0) {
+        diffLabel = '<span class="info-diff surplus">+' + diff + ' kcal/día <span class="info-diff-pct">(superávit ~' + pctDiff + '%)</span></span>';
+    } else {
+        diffLabel = '<span class="info-diff maintain">= mantenimiento</span>';
+    }
+
     el.innerHTML =
-        '<div class="info-item info-item-goal" id="info-goal-picker"><span class="info-icon">'+goalIcons[userGoal]+'</span><div><span class="info-label">Objetivo <button class="info-tip-btn" data-infotip="goal">i</button></span><span class="info-value info-value-clickable">'+goalLabels[userGoal]+' ✎</span></div></div>' +
-        '<div class="info-item"><span class="info-icon">📊</span><div><span class="info-label">TDEE <button class="info-tip-btn" data-infotip="tdee">i</button></span><span class="info-value">'+userTdee+' kcal/día</span></div></div>' +
-        '<div class="info-item"><span class="info-icon">🎯</span><div><span class="info-label">Recomendado <button class="info-tip-btn" data-infotip="rec">i</button></span><span class="info-value">'+recommendedKcal+' kcal/día</span></div></div>';
+        '<div class="info-banner-card">' +
+            '<div class="info-banner-goal" id="info-goal-picker">' +
+                '<span class="info-goal-icon">' + goalIcons[userGoal] + '</span>' +
+                '<span class="info-goal-text">' + goalLabels[userGoal] + ' ✎</span>' +
+            '</div>' +
+            '<div class="info-banner-metrics">' +
+                '<div class="info-metric">' +
+                    '<span class="info-metric-label">Lo que quemas</span>' +
+                    '<span class="info-metric-value">' + userTdee + '</span>' +
+                    '<span class="info-metric-sub">kcal/día (TDEE)</span>' +
+                '</div>' +
+                '<div class="info-metric-arrow">' +
+                    (diff <= 0 ? '📉' : '📈') +
+                '</div>' +
+                '<div class="info-metric info-metric-highlight">' +
+                    '<span class="info-metric-label">Lo que deberías comer</span>' +
+                    '<span class="info-metric-value">' + recommendedKcal + '</span>' +
+                    '<span class="info-metric-sub">kcal/día recomendadas</span>' +
+                '</div>' +
+            '</div>' +
+            diffLabel +
+            '<p class="info-banner-explain">' + goalDescs[userGoal] + '</p>' +
+            '<button class="info-whatis-btn" id="info-whatis-btn">¿Qué es el TDEE?</button>' +
+        '</div>';
 
     // Goal quick-change click
     document.getElementById('info-goal-picker').addEventListener('click', function(e) {
-        if (e.target.closest('.info-tip-btn')) return;
         showGoalPicker();
     });
 
-    // Attach click handlers for info tips
-    el.querySelectorAll('.info-tip-btn').forEach(function(btn) {
-        btn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            var key = this.dataset.infotip;
-            var title, body;
-            if (key === 'goal') {
-                title = 'Tu objetivo: ' + goalLabels[userGoal];
-                body = '<p>' + goalExplanations[userGoal] + '</p>';
-            } else if (key === 'tdee') {
-                title = 'TDEE — Gasto Energético Total';
-                body = '<p>Es el total de calorías que quemas al día <strong>incluyendo tu ejercicio</strong>.</p>' +
-                    '<p>Se calcula: TMB × Factor actividad + Calorías de entreno.</p>' +
-                    '<p>Tu TDEE es <strong>' + userTdee + ' kcal/día</strong> según tus datos (edad, peso, altura, actividad y entreno).</p>';
-            } else {
-                title = 'Calorías recomendadas';
-                body = '<p>' + recExplanations[userGoal] + '</p>' +
-                    '<p>Tu TDEE es ' + userTdee + ' kcal → Recomendado: <strong>' + recommendedKcal + ' kcal/día</strong>.</p>';
-            }
-            document.getElementById('tooltip-title').textContent = title;
-            document.getElementById('tooltip-body').innerHTML = body;
-            document.getElementById('tooltip-overlay').style.display = '';
-        });
+    // TDEE explainer
+    document.getElementById('info-whatis-btn').addEventListener('click', function(e) {
+        e.stopPropagation();
+        document.getElementById('tooltip-title').textContent = '¿Qué es el TDEE?';
+        document.getElementById('tooltip-body').innerHTML =
+            '<p>El <strong>TDEE</strong> (Total Daily Energy Expenditure) es el total de calorías que tu cuerpo gasta al día. Se calcula así:</p>' +
+            '<ul class="tooltip-list">' +
+            '<li><strong>TMB (Metabolismo Basal):</strong> Lo que quemas en reposo absoluto solo por estar vivo (respirar, bombear sangre, etc.).</li>' +
+            '<li><strong>× Factor de actividad:</strong> Se multiplica por tu nivel de movimiento diario (trabajo, paseos, recados…) sin contar el entreno.</li>' +
+            '<li><strong>+ Calorías de entreno:</strong> Lo que quemas en tus sesiones de ejercicio.</li>' +
+            '</ul>' +
+            '<p style="margin-top:10px;opacity:0.8">Si comes <strong>por debajo</strong> de tu TDEE → pierdes peso (déficit).<br>Si comes <strong>por encima</strong> → ganas peso (superávit).<br>Si comes <strong>igual</strong> → mantienes peso.</p>';
+        document.getElementById('tooltip-overlay').style.display = '';
     });
 }
 
