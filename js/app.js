@@ -444,10 +444,10 @@ document.getElementById('reconfigure-btn').addEventListener('click', function() 
 // KCAL CONTROLS
 // ============================================================
 function getSliderMin() {
-    return Math.max(1200, Math.round((recommendedKcal - 1000) / 100) * 100);
+    return Math.max(1200, Math.round((recommendedKcal - 400) / 100) * 100);
 }
 function getSliderMax() {
-    return Math.round((recommendedKcal + 1000) / 100) * 100;
+    return Math.round((recommendedKcal + 400) / 100) * 100;
 }
 
 function updateSliderRange() {
@@ -617,8 +617,8 @@ function loadState() {
         var data = JSON.parse(saved);
         if (!data.goal || !data.tdee) return false;
         recommendedKcal = data.recommended || 2500;
-        var minVal = Math.max(1200, Math.round((recommendedKcal - 1000) / 100) * 100);
-        var maxVal = Math.round((recommendedKcal + 1000) / 100) * 100;
+        var minVal = Math.max(1200, Math.round((recommendedKcal - 400) / 100) * 100);
+        var maxVal = Math.round((recommendedKcal + 400) / 100) * 100;
         if (data.kcal >= minVal && data.kcal <= maxVal) currentKcal = data.kcal;
         else currentKcal = recommendedKcal;
         userGoal = data.goal;
