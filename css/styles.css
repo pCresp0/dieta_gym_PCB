@@ -1128,6 +1128,66 @@ body {
     font-size: 1rem;
     font-weight: 700;
     color: var(--text-primary);
+    margin-right: 4px;
+}
+
+.nutrition-info-btn {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 1.5px solid var(--text-muted);
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    margin-right: auto;
+    transition: border-color 0.15s, color 0.15s;
+    flex-shrink: 0;
+}
+
+.nutrition-info-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+/* Macro tooltip styles */
+.macro-tip-rec {
+    font-size: 1.1rem;
+    color: var(--accent);
+    margin: 6px 0;
+}
+
+.macro-tip-source {
+    font-size: 0.75rem;
+    opacity: 0.6;
+    margin-top: 12px;
+}
+
+.macro-tip-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+    font-size: 0.85rem;
+}
+
+.macro-tip-table td {
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--border);
+}
+
+.macro-tip-table tr:last-child td {
+    border-bottom: none;
+}
+
+.macro-tip-dot {
+    font-size: 1.2rem;
+    width: 24px;
+    text-align: center;
 }
 
 .nutrition-meals {
@@ -1258,10 +1318,31 @@ body {
     letter-spacing: 0.04em;
 }
 
+.macro-card-perkg {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    opacity: 0.85;
+    font-variant-numeric: tabular-nums;
+}
+
 /* Color accents on card borders */
 .macro-card-protein { border-bottom: 3px solid var(--protein-accent); }
 .macro-card-carbs { border-bottom: 3px solid var(--carbs-accent); }
 .macro-card-fat { border-bottom: 3px solid var(--fat-accent); }
+
+/* Clickable macro cards */
+.macro-card[data-macro] {
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.macro-card[data-macro]:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+.macro-card[data-macro]:active {
+    transform: translateY(0);
+}
 
 .nutrition-ring {
     display: none;

@@ -382,6 +382,12 @@ function renderNutritionSummary() {
         missingHtml = '<div class="nutrition-missing">\u26a0\ufe0f Falta: ' + missingItems.join(' \u00b7 ') + '</div>';
     }
 
+    // g/kg body weight
+    var bodyWeight = parseFloat(document.getElementById('calc-weight').value) || 0;
+    var pPerKg = bodyWeight > 0 ? (p / bodyWeight).toFixed(1) : '--';
+    var cPerKg = bodyWeight > 0 ? (c / bodyWeight).toFixed(1) : '--';
+    var fPerKg = bodyWeight > 0 ? (f / bodyWeight).toFixed(1) : '--';
+
     // Stacked bar widths
     var pKcal = p * 4, cKcal = c * 4, fKcal = f * 9;
     var fromMacros = pKcal + cKcal + fKcal;
@@ -390,7 +396,7 @@ function renderNutritionSummary() {
     var fKcalPct = fromMacros > 0 ? 100 - pKcalPct - cKcalPct : 0;
 
     container.innerHTML =
-        '<div class="nutrition-header"><h3>\ud83d\udcca Resumen Nutricional</h3><span class="nutrition-meals">'+meals.join(' + ')+(complete?'':' \u00b7 Incompleto')+'</span></div>' +
+        '<div class="nutrition-header"><h3>\ud83d\udcca Resumen Nutricional</h3><button class="nutrition-info-btn" id="nutrition-info-btn">?</button><span class="nutrition-meals">'+meals.join(' + ')+(complete?'':' \u00b7 Incompleto')+'</span></div>' +
         missingHtml +
         '<div class="nutrition-body">' +
             '<div class="nutrition-kcal-row">' +
@@ -403,20 +409,21 @@ function renderNutritionSummary() {
                 '<div class="stacked-seg stacked-fat" style="width:'+fKcalPct+'%"></div>' +
             '</div>' +
             '<div class="nutrition-macro-cards">' +
-                renderMacroCard('Prote\u00ednas', 'protein', p, pp, pKcalPct) +
-                renderMacroCard('Carbos', 'carbs', c, cp, cKcalPct) +
-                renderMacroCard('Grasas', 'fat', f, fp, fKcalPct) +
+                renderMacroCard('Prote\u00ednas', 'protein', p, pp, pKcalPct, pPerKg) +
+                renderMacroCard('Carbos', 'carbs', c, cp, cKcalPct, cPerKg) +
+                renderMacroCard('Grasas', 'fat', f, fp, fKcalPct, fPerKg) +
             '</div>' +
         '</div>';
 }
 
-function renderMacroCard(name, cls, grams, pctWeight, pctKcal) {
-    return '<div class="macro-card macro-card-'+cls+'">' +
+function renderMacroCard(name, cls, grams, pctWeight, pctKcal, perKg) {
+    return '<div class="macro-card macro-card-'+cls+'" data-macro="'+cls+'">' +
         '<div class="macro-card-ring" style="--ring-pct:'+pctKcal+';--ring-color:var(--'+cls+'-accent)">' +
             '<span class="macro-card-ring-value">'+pctKcal+'%</span>' +
         '</div>' +
         '<div class="macro-card-info">' +
             '<span class="macro-card-grams">'+grams+'g</span>' +
+            '<span class="macro-card-perkg">'+perKg+' g/kg</span>' +
             '<span class="macro-card-name">'+name+'</span>' +
         '</div>' +
     '</div>';
@@ -710,8 +717,107 @@ function showTabToast(msg) {
     setTimeout(function() { toast.classList.remove('show'); setTimeout(function() { toast.remove(); }, 300); }, 3000);
 }
 
+// Macro tooltips data
+var macroTooltips = {
+    protein: {
+        title: '🥩 Proteínas',
+        body: function() {
+            var goal = userGoal || 'maintain';
+            var recs = {
+                cut: { range: '2.0 – 2.4', detail: 'En <strong>déficit calórico</strong>, la proteína alta es crucial para <strong>preservar masa muscular</strong> mientras pierdes grasa. Cuanto mayor es el déficit, más proteína necesitas.' },
+                recomp: { range: '1.8 – 2.2', detail: 'En <strong>recomposición</strong>, la proteína alta permite <strong>ganar músculo y perder grasa</strong> simultáneamente. Es el macronutriente más importante para este objetivo.' },
+                maintain: { range: '1.6 – 2.0', detail: 'En <strong>mantenimiento</strong>, una ingesta moderada-alta de proteína ayuda a <strong>conservar la masa muscular</strong> y la composición corporal.' },
+                bulk: { range: '1.6 – 2.0', detail: 'En <strong>volumen</strong>, no necesitas tanta proteína como en déficit porque el superávit calórico ya es anti-catabólico. Con 1.6-2.0g/kg es suficiente.' }
+            };
+            var rec = recs[goal];
+            var w = parseFloat(document.getElementById('calc-weight').value) || 0;
+            var rangeGrams = w > 0 ? ' (' + Math.round(parseFloat(rec.range.split('–')[0]) * w) + '–' + Math.round(parseFloat(rec.range.split('–')[1].trim()) * w) + 'g)' : '';
+            return '<p>Las proteínas son los <strong>bloques de construcción del músculo</strong>. Están formadas por aminoácidos que reparan y construyen tejido muscular, producen enzimas y hormonas, y mantienen el sistema inmunitario.</p>' +
+                '<p><strong>1g de proteína = 4 kcal</strong></p>' +
+                '<h4>Recomendación para tu objetivo</h4>' +
+                '<p class="macro-tip-rec"><strong>' + rec.range + ' g/kg' + rangeGrams + '</strong></p>' +
+                '<p>' + rec.detail + '</p>' +
+                '<p class="macro-tip-source">📚 Morton et al. 2018, Helms et al. 2014, ISSN Position Stand 2017</p>';
+        }
+    },
+    carbs: {
+        title: '🌾 Carbohidratos',
+        body: function() {
+            var goal = userGoal || 'maintain';
+            var recs = {
+                cut: { range: '2.0 – 4.0', detail: 'En <strong>déficit</strong>, los carbohidratos se ajustan después de fijar proteína y grasa. Mantener suficientes carbos preserva el <strong>rendimiento en el entreno</strong> y evita fatiga.' },
+                recomp: { range: '3.0 – 5.0', detail: 'En <strong>recomposición</strong>, los carbohidratos alimentan el entreno de fuerza. Son clave para el <strong>rendimiento</strong> y la <strong>recuperación</strong>.' },
+                maintain: { range: '3.0 – 5.0', detail: 'En <strong>mantenimiento</strong>, los carbohidratos deben cubrir tus necesidades energéticas diarias y de entreno sin exceso ni déficit.' },
+                bulk: { range: '4.0 – 7.0', detail: 'En <strong>volumen</strong>, los carbohidratos son el principal motor del superávit. Más glucógeno muscular = más volumen de entreno = más estímulo para <strong>hipertrofia</strong>.' }
+            };
+            var rec = recs[goal];
+            var w = parseFloat(document.getElementById('calc-weight').value) || 0;
+            var rangeGrams = w > 0 ? ' (' + Math.round(parseFloat(rec.range.split('–')[0]) * w) + '–' + Math.round(parseFloat(rec.range.split('–')[1].trim()) * w) + 'g)' : '';
+            return '<p>Los carbohidratos son la <strong>fuente de energía principal</strong> del cuerpo, especialmente para ejercicio de alta intensidad. Se almacenan como glucógeno en músculos e hígado.</p>' +
+                '<p><strong>1g de carbohidrato = 4 kcal</strong></p>' +
+                '<h4>Recomendación para tu objetivo</h4>' +
+                '<p class="macro-tip-rec"><strong>' + rec.range + ' g/kg' + rangeGrams + '</strong></p>' +
+                '<p>' + rec.detail + '</p>' +
+                '<p class="macro-tip-source">📚 Thomas et al. 2016 (ACSM), Kerksick et al. 2017 (ISSN)</p>';
+        }
+    },
+    fat: {
+        title: '🫒 Grasas',
+        body: function() {
+            var goal = userGoal || 'maintain';
+            var recs = {
+                cut: { range: '0.7 – 1.0', detail: 'En <strong>déficit</strong>, no bajes de 0.7g/kg: las grasas por debajo de este umbral afectan la <strong>producción hormonal</strong> (testosterona, estrógenos) y el sistema inmunitario.' },
+                recomp: { range: '0.8 – 1.2', detail: 'En <strong>recomposición</strong>, mantener grasas adecuadas asegura buena <strong>señalización hormonal</strong> y absorción de vitaminas liposolubles (A, D, E, K).' },
+                maintain: { range: '0.8 – 1.2', detail: 'En <strong>mantenimiento</strong>, las grasas deben representar al menos un <strong>20-30% del TDEE</strong> para una salud óptima.' },
+                bulk: { range: '0.8 – 1.5', detail: 'En <strong>volumen</strong>, las grasas tienen alta densidad calórica (9 kcal/g), útiles para alcanzar el superávit. Pero prioriza carbohidratos para el rendimiento.' }
+            };
+            var rec = recs[goal];
+            var w = parseFloat(document.getElementById('calc-weight').value) || 0;
+            var rangeGrams = w > 0 ? ' (' + Math.round(parseFloat(rec.range.split('–')[0]) * w) + '–' + Math.round(parseFloat(rec.range.split('–')[1].trim()) * w) + 'g)' : '';
+            return '<p>Las grasas son <strong>esenciales</strong> para la producción hormonal, absorción de vitaminas, salud celular y función cerebral. No deben eliminarse nunca de la dieta.</p>' +
+                '<p><strong>1g de grasa = 9 kcal</strong></p>' +
+                '<h4>Recomendación para tu objetivo</h4>' +
+                '<p class="macro-tip-rec"><strong>' + rec.range + ' g/kg' + rangeGrams + '</strong></p>' +
+                '<p>' + rec.detail + '</p>' +
+                '<p class="macro-tip-source">📚 Volek et al. 2015, ISSN Position Stand 2017, Hector & Phillips 2018</p>';
+        }
+    }
+};
+
 // Tooltip
 document.addEventListener('click', function(e) {
+    // Nutrition info button
+    var nutritionInfoBtn = e.target.closest('#nutrition-info-btn');
+    if (nutritionInfoBtn) {
+        e.preventDefault(); e.stopPropagation();
+        var goal = userGoal || 'maintain';
+        var goalName = goalLabels[goal] || 'Mantener peso';
+        document.getElementById('tooltip-title').textContent = '¿Qué son los macronutrientes?';
+        document.getElementById('tooltip-body').innerHTML =
+            '<p>Los <strong>macronutrientes</strong> son los tres grandes grupos de nutrientes que aportan energía: <strong>proteínas, carbohidratos y grasas</strong>. Cada uno cumple funciones diferentes y su proporción varía según tu objetivo.</p>' +
+            '<h4>' + goalIcons[goal] + ' Tu objetivo: ' + goalName + '</h4>' +
+            '<table class="macro-tip-table">' +
+            '<tr><td class="macro-tip-dot" style="color:var(--protein-accent)">●</td><td><strong>Proteínas</strong></td><td>Construyen y reparan músculo</td><td><strong>4 kcal/g</strong></td></tr>' +
+            '<tr><td class="macro-tip-dot" style="color:var(--carbs-accent)">●</td><td><strong>Carbohidratos</strong></td><td>Energía para el entreno</td><td><strong>4 kcal/g</strong></td></tr>' +
+            '<tr><td class="macro-tip-dot" style="color:var(--fat-accent)">●</td><td><strong>Grasas</strong></td><td>Hormonas y salud celular</td><td><strong>9 kcal/g</strong></td></tr>' +
+            '</table>' +
+            '<p style="margin-top:12px;opacity:0.8">Pulsa sobre cada macronutriente en el resumen para ver recomendaciones detalladas para tu objetivo.</p>';
+        document.getElementById('tooltip-overlay').style.display = '';
+        return;
+    }
+    // Macro card click
+    var macroCard = e.target.closest('.macro-card[data-macro]');
+    if (macroCard) {
+        e.preventDefault(); e.stopPropagation();
+        var macro = macroCard.dataset.macro;
+        var tip = macroTooltips[macro];
+        if (tip) {
+            document.getElementById('tooltip-title').textContent = tip.title;
+            document.getElementById('tooltip-body').innerHTML = tip.body();
+            document.getElementById('tooltip-overlay').style.display = '';
+        }
+        return;
+    }
     var trigger = e.target.closest('.tooltip-trigger');
     if (trigger) { e.preventDefault(); e.stopPropagation(); var d = tooltipData[trigger.dataset.tooltip]; if(d){document.getElementById('tooltip-title').textContent=d.title;document.getElementById('tooltip-body').innerHTML=d.body;document.getElementById('tooltip-overlay').style.display='';} return; }
     // Supplement tooltip
