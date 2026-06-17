@@ -771,15 +771,19 @@ function renderSilhouettes() {
 
 // Init silhouettes on load and sex change
 document.getElementById('calc-sex').addEventListener('change', function() {
+    document.getElementById('calc-bf').value = '';
     renderSilhouettes();
+    estimateBodyFatFromBMI();
 });
 
 document.getElementById('silhouette-grid').addEventListener('click', function(e) {
     var card = e.target.closest('.silhouette-card');
     if (!card) return;
-    document.querySelectorAll('.silhouette-card').forEach(function(c) { c.classList.remove('selected'); });
+    document.querySelectorAll('.silhouette-card').forEach(function(c) { c.classList.remove('selected', 'suggested'); });
     card.classList.add('selected');
     document.getElementById('calc-bf').value = card.dataset.bf;
+    var hint = document.getElementById('silhouette-hint');
+    if (hint) hint.textContent = 'Selecciona la silueta que más se parezca a tu cuerpo actual.';
 });
 
 function showStep(n) {
@@ -797,8 +801,68 @@ function validateStep1() {
     var age = document.getElementById('calc-age').value;
     var h = document.getElementById('calc-height').value;
     var w = document.getElementById('calc-weight').value;
-    return age && h && w && parseFloat(age)>0 && parseFloat(h)>0 && parseFloat(w)>0;
+    return age && h && w && parseFloat(age) >= 18 && parseFloat(h) > 0 && parseFloat(w) > 0;
 }
+
+// Age under 18 warning
+document.getElementById('calc-age').addEventListener('input', function() {
+    var hint = document.getElementById('age-hint');
+    var val = parseInt(this.value);
+    if (val && val > 0 && val < 18) {
+        hint.innerHTML = '⚠️ Para menores de 18 años, el cuerpo está en pleno desarrollo y las necesidades nutricionales son diferentes. ' +
+            'Te recomendamos consultar con un médico o nutricionista especializado en adolescentes antes de seguir cualquier plan de alimentación.';
+        hint.classList.add('age-warning');
+    } else {
+        hint.textContent = '';
+        hint.classList.remove('age-warning');
+    }
+    estimateBodyFatFromBMI();
+});
+
+// BMI → Body Fat estimation (Deurenberg et al., 1991)
+function estimateBodyFatFromBMI() {
+    var age = parseFloat(document.getElementById('calc-age').value);
+    var h = parseFloat(document.getElementById('calc-height').value);
+    var w = parseFloat(document.getElementById('calc-weight').value);
+    var sex = document.getElementById('calc-sex').value;
+    if (!age || !h || !w || age < 18 || h < 100 || w < 30) return;
+
+    var bmi = w / ((h / 100) * (h / 100));
+    var sexFactor = sex === 'male' ? 1 : 0;
+    // Deurenberg formula
+    var estimatedBf = (1.20 * bmi) + (0.23 * age) - (10.8 * sexFactor) - 5.4;
+    estimatedBf = Math.max(5, Math.min(50, estimatedBf));
+
+    // Only auto-suggest if user hasn't manually chosen one
+    var currentBf = document.getElementById('calc-bf').value;
+    if (currentBf) return; // user already picked one
+
+    // Find closest silhouette
+    var data = silhouetteData[sex] || silhouetteData.male;
+    var closest = data[0];
+    var minDist = Math.abs(estimatedBf - data[0].bf);
+    for (var i = 1; i < data.length; i++) {
+        var dist = Math.abs(estimatedBf - data[i].bf);
+        if (dist < minDist) { minDist = dist; closest = data[i]; }
+    }
+
+    // Pre-select with suggestion styling
+    document.getElementById('calc-bf').value = closest.bf;
+    document.querySelectorAll('.silhouette-card').forEach(function(c) {
+        c.classList.remove('selected', 'suggested');
+        if (parseFloat(c.dataset.bf) === closest.bf) {
+            c.classList.add('selected', 'suggested');
+        }
+    });
+
+    var hint = document.getElementById('silhouette-hint');
+    if (hint) {
+        hint.innerHTML = 'Estimación según tus datos (IMC ' + bmi.toFixed(1) + '). <strong>Puedes cambiarlo</strong> si no te representa.';
+    }
+}
+
+document.getElementById('calc-height').addEventListener('input', estimateBodyFatFromBMI);
+document.getElementById('calc-weight').addEventListener('input', estimateBodyFatFromBMI);
 
 function validateStep2() {
     return document.getElementById('calc-activity').value !== '';
@@ -896,6 +960,11 @@ document.getElementById('calc-steps').addEventListener('input', function() {
 
 // Step navigation
 document.getElementById('next-1').addEventListener('click', function() {
+    var age = parseInt(document.getElementById('calc-age').value);
+    if (age && age < 18) {
+        alert('Este plan está diseñado para adultos (18+). Si eres menor de 18, tu cuerpo aún está en desarrollo y tus necesidades nutricionales son diferentes. Consulta con un médico o nutricionista antes de seguir cualquier dieta.');
+        return;
+    }
     if (!validateStep1()) { alert('Rellena todos los campos: edad, altura y peso.'); return; }
     userName = (document.getElementById('calc-name').value || '').trim();
     showStep(2);

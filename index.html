@@ -48,7 +48,8 @@
                         </div>
                         <div class="calc-field">
                             <label for="calc-age">Edad</label>
-                            <input type="number" id="calc-age" min="14" max="80" placeholder="25">
+                            <input type="number" id="calc-age" min="14" max="99" placeholder="25">
+                            <span class="calc-hint" id="age-hint"></span>
                         </div>
                     </div>
                     <div class="calc-row">
@@ -64,7 +65,7 @@
                     <div class="calc-row">
                         <div class="calc-field full-width">
                             <label>¿Cómo te ves? <span class="label-optional">(estima tu % grasa)</span></label>
-                            <p class="calc-hint silhouette-hint">Selecciona la silueta que más se parezca a tu cuerpo actual.</p>
+                            <p class="calc-hint silhouette-hint" id="silhouette-hint">Selecciona la silueta que más se parezca a tu cuerpo actual.</p>
                             <div class="silhouette-grid" id="silhouette-grid"></div>
                             <input type="hidden" id="calc-bf" value="">
                         </div>
