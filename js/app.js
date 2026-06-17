@@ -1502,54 +1502,6 @@ document.querySelectorAll('.theme-toggle').forEach(function(btn) {
 applyTheme(getTheme());
 
 // ============================================================
-// COMPACT HEADER ON SCROLL
-// ============================================================
-(function() {
-    var header = null;
-    var tabsNav = null;
-    var isCompact = false;
-    var ticking = false;
-    var cooldown = false;
-
-    function updateTabsTop() {
-        if (!tabsNav) tabsNav = document.querySelector('.main-tabs-nav');
-        if (!tabsNav || !header) return;
-        tabsNav.style.top = header.offsetHeight + 'px';
-    }
-
-    function onScroll() {
-        if (!header) header = document.querySelector('.header');
-        if (!header || cooldown) return;
-
-        var y = window.scrollY;
-
-        if (y > 80 && !isCompact) {
-            header.classList.add('header-compact');
-            isCompact = true;
-            cooldown = true;
-            setTimeout(function() { cooldown = false; updateTabsTop(); }, 450);
-        } else if (y < 10 && isCompact) {
-            header.classList.remove('header-compact');
-            isCompact = false;
-            cooldown = true;
-            setTimeout(function() { cooldown = false; updateTabsTop(); }, 450);
-        }
-    }
-
-    window.addEventListener('scroll', function() {
-        if (!ticking) {
-            ticking = true;
-            requestAnimationFrame(function() {
-                onScroll();
-                ticking = false;
-            });
-        }
-    }, { passive: true });
-
-    setTimeout(updateTabsTop, 100);
-})();
-
-// ============================================================
 // INIT
 // ============================================================
 function init() {
