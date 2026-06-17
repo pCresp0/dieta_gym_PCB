@@ -1782,6 +1782,36 @@ function buildMealSummaryHTML(selObj, ratio, isTrainer) {
     var complete = bk && lunchItems && dinnerItems;
     if (!complete) return '';
 
+    // Calculate kcal per meal
+    function calcBreakfastKcal() {
+        if (selObj.breakfast === null) return 0;
+        var m = breakfastOptions[selObj.breakfast].macros;
+        return Math.round(m[0] * carbR);
+    }
+    function calcMealKcal(carbsData, protsData, carbIdx, protIdx) {
+        var kcal = 0;
+        if (carbIdx !== null) {
+            var carb = carbsData[carbIdx];
+            var cg = isTrainer ? carb.base : scaleAmount(carb.base, carbR);
+            kcal += carb.n[0] * cg / 100;
+        }
+        if (protIdx !== null) {
+            var prot = protsData[protIdx];
+            var pg = isTrainer ? prot.base : scaleAmount(prot.base, protR);
+            kcal += prot.n[0] * pg / 100;
+        }
+        var vegG = isTrainer ? 200 : scaleAmount(200, carbR);
+        var oilMl = isTrainer ? EXTRAS_OIL_ML : scaleAmount(EXTRAS_OIL_ML, carbR);
+        kcal += extrasNutr.verduras[0] * vegG / 100;
+        kcal += extrasNutr.aceite[0] * oilMl / 100;
+        kcal += extrasNutr.fruta[0];
+        return Math.round(kcal);
+    }
+
+    var bkKcal = calcBreakfastKcal();
+    var lunchKcal = calcMealKcal(lunchCarbs, lunchProteins, selObj.lunchCarb, selObj.lunchProtein);
+    var dinnerKcal = calcMealKcal(dinnerCarbs, dinnerProteins, selObj.dinnerCarb, selObj.dinnerProtein);
+
     function suppHTML(mealKey) {
         var supps = mealSupplements[mealKey] || [];
         if (!supps.length) return '';
@@ -1796,7 +1826,7 @@ function buildMealSummaryHTML(selObj, ratio, isTrainer) {
 
     // Breakfast
     html += '<div class="summary-meal">' +
-        '<div class="summary-meal-header">☀️ Desayuno</div>' +
+        '<div class="summary-meal-header">☀️ Desayuno <span class="summary-meal-kcal">' + bkKcal + ' kcal</span></div>' +
         '<div class="summary-meal-name">' + bk.name + '</div>' +
         '<ul class="summary-meal-items">' + bk.items.map(function(i){ return '<li>'+i+'</li>'; }).join('') + '</ul>' +
         suppHTML('breakfast') +
@@ -1804,14 +1834,14 @@ function buildMealSummaryHTML(selObj, ratio, isTrainer) {
 
     // Lunch
     html += '<div class="summary-meal">' +
-        '<div class="summary-meal-header">🍲 Almuerzo</div>' +
+        '<div class="summary-meal-header">🍲 Almuerzo <span class="summary-meal-kcal">' + lunchKcal + ' kcal</span></div>' +
         '<ul class="summary-meal-items">' + lunchItems.map(function(i){ return '<li>'+i+'</li>'; }).join('') + '</ul>' +
         suppHTML('lunch') +
         '</div>';
 
     // Dinner
     html += '<div class="summary-meal">' +
-        '<div class="summary-meal-header">🌙 Cena</div>' +
+        '<div class="summary-meal-header">🌙 Cena <span class="summary-meal-kcal">' + dinnerKcal + ' kcal</span></div>' +
         '<ul class="summary-meal-items">' + dinnerItems.map(function(i){ return '<li>'+i+'</li>'; }).join('') + '</ul>' +
         '</div>';
 

@@ -1435,6 +1435,16 @@ body {
     font-weight: 700;
     margin-bottom: 6px;
     color: var(--text);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.summary-meal-kcal {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--accent);
+    opacity: 0.9;
 }
 
 .summary-meal-name {
