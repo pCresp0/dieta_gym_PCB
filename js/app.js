@@ -830,6 +830,36 @@ function showTabToast(msg) {
     setTimeout(function() { toast.classList.remove('show'); setTimeout(function() { toast.remove(); }, 300); }, 3000);
 }
 
+// Random diet
+function randomDiet() {
+    selections.breakfast = Math.floor(Math.random() * breakfastOptions.length);
+    selections.lunchCarb = Math.floor(Math.random() * lunchCarbs.length);
+    selections.lunchProtein = Math.floor(Math.random() * lunchProteins.length);
+    selections.dinnerCarb = Math.floor(Math.random() * dinnerCarbs.length);
+    selections.dinnerProtein = Math.floor(Math.random() * dinnerProteins.length);
+    renderAll();
+    saveAllState();
+
+    // Scroll to diet summary
+    setTimeout(function() {
+        var summary = document.getElementById('diet-summary');
+        if (summary && summary.innerHTML) {
+            summary.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }, 100);
+}
+
+(function() {
+    var btn = document.getElementById('random-diet-btn');
+    if (btn) {
+        btn.addEventListener('click', function() {
+            btn.classList.add('animating');
+            setTimeout(function() { btn.classList.remove('animating'); }, 500);
+            randomDiet();
+        });
+    }
+})();
+
 // Macro tooltips data
 var macroTooltips = {
     protein: {
