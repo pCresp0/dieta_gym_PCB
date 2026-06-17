@@ -1158,26 +1158,47 @@ function generateWeeklyPlan() {
             breakfast: pickRandom(breakfastOptions, usedBreakfast, bMax),
             lunchCarb: pickRandom(lunchCarbs, usedLunchCarb, lcMax),
             lunchProtein: pickRandom(lunchProteins, usedLunchProt, lpMax),
-            dinnerCarb: pickRandom(dinnerCarbs, usedDinnerCarb, dcMax),
-            dinnerProtein: pickRandom(dinnerProteins, usedDinnerProt, dpMax)
+            dinnerCarb: null,
+            dinnerProtein: null
         };
-        plan.push({ day: days[d], selections: sel });
-    }
 
-    // Also try to avoid same carb in lunch and dinner same day
-    for (var d = 0; d < 7; d++) {
-        if (lunchCarbs[plan[d].selections.lunchCarb].name === dinnerCarbs[plan[d].selections.dinnerCarb].name) {
-            // Try swapping dinner carb with another day
-            for (var other = 0; other < 7; other++) {
-                if (other !== d && lunchCarbs[plan[other].selections.lunchCarb].name !== dinnerCarbs[plan[d].selections.dinnerCarb].name
-                    && lunchCarbs[plan[d].selections.lunchCarb].name !== dinnerCarbs[plan[other].selections.dinnerCarb].name) {
-                    var tmp = plan[d].selections.dinnerCarb;
-                    plan[d].selections.dinnerCarb = plan[other].selections.dinnerCarb;
-                    plan[other].selections.dinnerCarb = tmp;
-                    break;
-                }
-            }
+        // Pick dinner carb avoiding same name as lunch carb
+        var dinnerCarbCandidates = [];
+        for (var ci = 0; ci < dinnerCarbs.length; ci++) {
+            if (dinnerCarbs[ci].name !== lunchCarbs[sel.lunchCarb].name) dinnerCarbCandidates.push(ci);
         }
+        if (dinnerCarbCandidates.length === 0) {
+            for (var ci = 0; ci < dinnerCarbs.length; ci++) dinnerCarbCandidates.push(ci);
+        }
+        // Prefer less-used candidates
+        var bestDC = dinnerCarbCandidates.filter(function(ci) {
+            var count = 0;
+            for (var j = 0; j < usedDinnerCarb.length; j++) { if (usedDinnerCarb[j] === ci) count++; }
+            return count < dcMax;
+        });
+        if (bestDC.length === 0) bestDC = dinnerCarbCandidates;
+        sel.dinnerCarb = bestDC[Math.floor(Math.random() * bestDC.length)];
+        usedDinnerCarb.push(sel.dinnerCarb);
+
+        // Pick dinner protein avoiding same name as lunch protein
+        var dinnerProtCandidates = [];
+        for (var pi = 0; pi < dinnerProteins.length; pi++) {
+            if (dinnerProteins[pi].name !== lunchProteins[sel.lunchProtein].name) dinnerProtCandidates.push(pi);
+        }
+        if (dinnerProtCandidates.length === 0) {
+            for (var pi = 0; pi < dinnerProteins.length; pi++) dinnerProtCandidates.push(pi);
+        }
+        // Prefer less-used candidates
+        var bestDP = dinnerProtCandidates.filter(function(pi) {
+            var count = 0;
+            for (var j = 0; j < usedDinnerProt.length; j++) { if (usedDinnerProt[j] === pi) count++; }
+            return count < dpMax;
+        });
+        if (bestDP.length === 0) bestDP = dinnerProtCandidates;
+        sel.dinnerProtein = bestDP[Math.floor(Math.random() * bestDP.length)];
+        usedDinnerProt.push(sel.dinnerProtein);
+
+        plan.push({ day: days[d], selections: sel });
     }
 
     return plan;
