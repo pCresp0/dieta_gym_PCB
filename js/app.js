@@ -42,14 +42,13 @@ var dinnerProteins = [
 ];
 
 var extrasNutr = { verduras:[25,2,4,0.3], aceite:[900,0,0,100], fruta:[80,0.5,20,0.2] };
-var EXTRAS_OIL_ML = 15; // 1 cucharada sopera AOVE por comida (oleocantal antiinflamatorio)
+var EXTRAS_OIL_ML = 5; // 5ml aceite oliva por comida (según entrenador)
 
 var supplements = [
-    {icon:'💪',title:'Creatina monohidrato',desc:'5g/día (todos los días, entrenes o no)',tip:'La ISSN recomienda 3-5g/día crónicos para mantener saturación intramuscular. Mejora resíntesis de ATP y fuerza. No es necesaria fase de carga (Jäger et al. 2017).'},
-    {icon:'🐟',title:'Omega 3 (ESN Omega-3)',desc:'3 cápsulas/día → 1200mg EPA + 900mg DHA',tip:'Cada porción (3 caps) aporta 1200mg EPA + 900mg DHA en forma triglicérido natural. Analizado para metales pesados. Dosis de 2-3g/día EPA+DHA atenúan DOMS y reducen inflamación (ISSN 2024).'},
-    {icon:'🧲',title:'Magnesio (ESN Magnesium Complex)',desc:'3 cápsulas/día antes de dormir (complejo 4-en-1)',tip:'Complejo 4-en-1 de alta biodisponibilidad. Porción = 3 cápsulas. Cofactor del ATP, mejora calidad del sueño profundo y reduce lactato. Formas orgánicas superiores a óxido (Dominguez et al. 2025).'},
-    {icon:'⚡',title:'Zinc (ESN Zinc)',desc:'1 cápsula/día → 25mg zinc antes de dormir',tip:'25mg de zinc de alta biodisponibilidad por cápsula. Apoyo inmunitario y recuperación. Dentro del rango seguro (8-40mg/día). >100mg/día es tóxico. No tomar con calcio o hierro (ISSN).'},
-    {icon:'😴',title:'Melatonina',desc:'6-10mg pre-sueño',tip:'Mejora sprint anaeróbico al día siguiente, acelera recuperación y reduce marcadores de daño muscular (CK, LDH). Sin efecto si se toma pre-ejercicio (Guo et al. 2026).'}
+    {icon:'💪',title:'Creatina',desc:'8g todos los días',tip:'8g/día crónicos para mantener saturación intramuscular. Mejora resíntesis de ATP y fuerza. No es necesaria fase de carga.'},
+    {icon:'🐟',title:'Omega 3',desc:'2 pastillas/día (1 desayuno + 1 comida)',tip:'Dosis de 2-3g/día EPA+DHA atenúan DOMS y reducen inflamación (ISSN 2024).'},
+    {icon:'🧲',title:'Magnesio y Zinc',desc:'2 pastillas antes de dormir',tip:'Cofactor del ATP, mejora calidad del sueño profundo y reduce lactato. Zinc apoyo inmunitario y recuperación.'},
+    {icon:'😴',title:'Melatonina',desc:'Opcional, para favorecer el descanso',tip:'Mejora sprint anaeróbico al día siguiente, acelera recuperación y reduce marcadores de daño muscular.'}
 ];
 
 var goalLabels = { cut:'Perder grasa', recomp:'Recomposición corporal', maintain:'Mantener peso', bulk:'Ganar masa muscular' };
@@ -580,9 +579,8 @@ document.addEventListener('click', function(e) {
         e.preventDefault(); e.stopPropagation();
         document.getElementById('tooltip-title').textContent = 'Base obligatoria por comida';
         document.getElementById('tooltip-body').innerHTML = '<p><strong>Verduras (~200g):</strong> Fibra, micronutrientes y volumen saciante con m\u00ednimas calor\u00edas.</p>' +
-            '<p><strong>Aceite de oliva virgen extra (15ml = 1 cuchara sopera):</strong> El oleocantal del AOVE inhibe COX-1 y COX-2 como el ibuprofeno, reduciendo inflamaci\u00f3n y agujetas (DOMS). Dosis m\u00ednima eficaz: 30-45ml/d\u00eda (Beauchamp et al.).</p>' +
-            '<p><strong>1 fruta:</strong> Aporta vitaminas, antioxidantes y carbohidratos de bajo IG para recuperaci\u00f3n.</p>' +
-            '<p><strong>Grasas nunca &lt;20% del TDEE</strong> para mantener s\u00edntesis hormonal (testosterona) y salud inmunitaria (ISSN 2017).</p>';
+            '<p><strong>Aceite de oliva virgen extra (5ml):</strong> Grasas saludables esenciales para absorción de vitaminas liposolubles y síntesis hormonal.</p>' +
+            '<p><strong>1 fruta:</strong> Aporta vitaminas, antioxidantes y carbohidratos de bajo IG para recuperación.</p>';
         document.getElementById('tooltip-overlay').style.display = '';
         return;
     }
@@ -782,7 +780,7 @@ function renderTrainerContent() {
         html += '<tr><td>' + item.name + '</td><td><strong>' + item.base + (item.unit || 'g') + '</strong></td></tr>';
     });
     html += '</tbody></table></div>';
-    html += '<div class="trainer-extras">+ ~200g verduras | 15ml AOVE | 1 fruta</div>';
+    html += '<div class="trainer-extras">+ ~200g verduras | 5ml AOVE | 1 fruta</div>';
     html += '</div>';
 
     // Cena
@@ -798,7 +796,7 @@ function renderTrainerContent() {
         html += '<tr><td>' + item.name + '</td><td><strong>' + item.base + (item.unit || 'g') + '</strong></td></tr>';
     });
     html += '</tbody></table></div>';
-    html += '<div class="trainer-extras">+ ~200g verduras | 15ml AOVE | 1 fruta</div>';
+    html += '<div class="trainer-extras">+ ~200g verduras | 5ml AOVE | 1 fruta</div>';
     html += '</div>';
 
     // Suplementos
