@@ -1070,11 +1070,7 @@ applyTheme(getTheme());
     var header = null;
     var tabsNav = null;
     var isCompact = false;
-    var lastY = 0;
-    var scrollDelta = 0;
     var ticking = false;
-    var COMPACT_THRESHOLD = 80;  // px scrolled down to compact
-    var EXPAND_THRESHOLD = 40;   // px scrolled up to expand
 
     function updateTabsTop() {
         if (!tabsNav) tabsNav = document.querySelector('.main-tabs-nav');
@@ -1087,37 +1083,15 @@ applyTheme(getTheme());
         if (!header) return;
 
         var y = window.scrollY;
-        var dy = y - lastY;
-        lastY = y;
 
-        // Near the top: always expanded
-        if (y < 50) {
-            if (isCompact) {
-                header.classList.remove('header-compact');
-                isCompact = false;
-                scrollDelta = 0;
-                updateTabsTop();
-            }
-            return;
-        }
-
-        // Accumulate scroll delta in the current direction
-        if ((dy > 0 && scrollDelta < 0) || (dy < 0 && scrollDelta > 0)) {
-            scrollDelta = 0; // direction changed, reset
-        }
-        scrollDelta += dy;
-
-        if (!isCompact && scrollDelta > COMPACT_THRESHOLD) {
+        if (y > 60 && !isCompact) {
             header.classList.add('header-compact');
             isCompact = true;
-            scrollDelta = 0;
-            // Wait for transition to finish then update tabs position
-            setTimeout(updateTabsTop, 380);
-        } else if (isCompact && scrollDelta < -EXPAND_THRESHOLD) {
+            setTimeout(updateTabsTop, 400);
+        } else if (y < 30 && isCompact) {
             header.classList.remove('header-compact');
             isCompact = false;
-            scrollDelta = 0;
-            setTimeout(updateTabsTop, 380);
+            setTimeout(updateTabsTop, 400);
         }
     }
 
@@ -1131,7 +1105,6 @@ applyTheme(getTheme());
         }
     }, { passive: true });
 
-    // Set initial tabs top after DOM is ready
     setTimeout(updateTabsTop, 100);
 })();
 
