@@ -83,6 +83,7 @@ var currentKcal = 2500;
 var recommendedKcal = 2500;
 var userGoal = null;
 var userTdee = null;
+var userName = '';
 var selections = { breakfast:null, lunchCarb:null, lunchProtein:null, dinnerCarb:null, dinnerProtein:null };
 
 function getExportFileName(prefix) {
@@ -465,11 +466,12 @@ function renderInfoBanner() {
     var absDiff = Math.abs(diff);
     var pctDiff = Math.abs(Math.round(diff / userTdee * 100));
 
+    var namePrefix = userName ? userName + ', c' : 'C';
     var goalDescs = {
-        cut: 'Comes por debajo de lo que quemas para <strong>perder grasa</strong> manteniendo músculo.',
-        recomp: 'Comes ligeramente por debajo de lo que quemas para <strong>ganar músculo y perder grasa</strong> a la vez.',
-        maintain: 'Comes lo mismo que quemas para <strong>mantener tu peso</strong> y composición corporal.',
-        bulk: 'Comes por encima de lo que quemas para <strong>ganar masa muscular</strong> con mínima grasa.'
+        cut: namePrefix + 'omes por debajo de lo que quemas para <strong>perder grasa</strong> manteniendo músculo.',
+        recomp: namePrefix + 'omes ligeramente por debajo de lo que quemas para <strong>ganar músculo y perder grasa</strong> a la vez.',
+        maintain: namePrefix + 'omes lo mismo que quemas para <strong>mantener tu peso</strong> y composición corporal.',
+        bulk: namePrefix + 'omes por encima de lo que quemas para <strong>ganar masa muscular</strong> con mínima grasa.'
     };
 
     var diffLabel = '';
@@ -895,6 +897,7 @@ document.getElementById('calc-steps').addEventListener('input', function() {
 // Step navigation
 document.getElementById('next-1').addEventListener('click', function() {
     if (!validateStep1()) { alert('Rellena todos los campos: edad, altura y peso.'); return; }
+    userName = (document.getElementById('calc-name').value || '').trim();
     showStep(2);
 });
 
@@ -1095,7 +1098,7 @@ document.getElementById('next-3').addEventListener('click', function() {
     tips.push({
         icon: '📅',
         title: 'La constancia es lo que funciona',
-        text: 'No existe la dieta perfecta, solo la que puedes <strong>mantener a largo plazo</strong>. ' +
+        text: (userName ? userName + ', no' : 'No') + ' existe la dieta perfecta, solo la que puedes <strong>mantener a largo plazo</strong>. ' +
               'Los cambios se ven en semanas, no en días. Pésate siempre en las mismas condiciones (mañana, en ayunas) ' +
               'y compara <strong>medias semanales</strong>, no el día a día. ' +
               'Si algún día te sales del plan, simplemente retómalo al día siguiente.'
@@ -1112,7 +1115,7 @@ document.getElementById('next-3').addEventListener('click', function() {
     }).join('');
 
     document.getElementById('ob-tips').innerHTML =
-        '<h3 class="ob-tips-heading">💡 Recomendaciones para ti</h3>' + tipsHTML;
+        '<h3 class="ob-tips-heading">💡 Recomendaciones ' + (userName ? 'para ' + userName : 'para ti') + '</h3>' + tipsHTML;
 
     showStep(4);
 });
@@ -1195,7 +1198,11 @@ function updateSliderRange() {
     var titleEl = document.getElementById('header-title');
     if (titleEl && userGoal) {
         var goalName = goalLabels[userGoal] || 'tu objetivo';
-        titleEl.textContent = 'Mi plan personalizado para ' + goalName.toLowerCase();
+        if (userName) {
+            titleEl.textContent = 'Plan de ' + userName + ' para ' + goalName.toLowerCase();
+        } else {
+            titleEl.textContent = 'Mi plan personalizado para ' + goalName.toLowerCase();
+        }
     }
 }
 
@@ -1516,7 +1523,7 @@ function buildWeeklyExportCanvas(plan) {
 
     ctx.fillStyle = textWhite;
     ctx.font = 'bold 32px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-    ctx.fillText('📅 Mi Plan Semanal', pad, 52);
+    ctx.fillText('📅 ' + (userName ? 'Plan de ' + userName : 'Mi Plan Semanal'), pad, 52);
 
     ctx.font = '18px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
     ctx.fillStyle = 'rgba(255,255,255,0.7)';
@@ -1878,7 +1885,7 @@ document.addEventListener('click', function(e) {
 function saveAllState() {
     try {
         var calcData = {};
-        ['calc-sex','calc-age','calc-height','calc-weight','calc-bf','calc-activity','calc-trains','calc-train-type','calc-train-days','calc-train-duration','calc-train-intensity','calc-steps','calc-experience','calc-diet-history','calc-appetite','calc-alcohol'].forEach(function(id) {
+        ['calc-name','calc-sex','calc-age','calc-height','calc-weight','calc-bf','calc-activity','calc-trains','calc-train-type','calc-train-days','calc-train-duration','calc-train-intensity','calc-steps','calc-experience','calc-diet-history','calc-appetite','calc-alcohol'].forEach(function(id) {
             var el = document.getElementById(id); if (el) calcData[id] = el.value;
         });
         calcData['calc-steps-unknown'] = document.getElementById('calc-steps-unknown').checked ? 'true' : 'false';
@@ -1887,6 +1894,7 @@ function saveAllState() {
             recommended: recommendedKcal,
             goal: userGoal,
             tdee: userTdee,
+            name: userName,
             selections: selections,
             calc: calcData
         }));
@@ -1906,6 +1914,11 @@ function loadState() {
         else currentKcal = recommendedKcal;
         userGoal = data.goal;
         userTdee = data.tdee;
+        userName = data.name || '';
+        if (userName) {
+            var nameEl = document.getElementById('calc-name');
+            if (nameEl) nameEl.value = userName;
+        }
         if (data.selections) {
             selections = { breakfast:null, lunchCarb:null, lunchProtein:null, dinnerCarb:null, dinnerProtein:null };
             Object.keys(data.selections).forEach(function(k) { if (k in selections) selections[k] = data.selections[k]; });
@@ -2493,7 +2506,7 @@ function buildWhatsAppText() {
     var goalName = goalLabels[userGoal] || 'Mi dieta';
     var goalIcon = goalIcons[userGoal] || '🍽️';
 
-    var text = '🍽️ *MI PLAN NUTRICIONAL*\n';
+    var text = '🍽️ *' + (userName ? 'PLAN DE ' + userName.toUpperCase() : 'MI PLAN NUTRICIONAL') + '*\n';
     text += goalIcon + ' Objetivo: *' + goalName + '*\n';
     text += '📊 *' + totalKcal + ' kcal*\n';
     text += '  • Proteínas: ' + p + 'g\n';
@@ -2670,7 +2683,7 @@ function buildExportCanvas() {
 
     ctx.fillStyle = textWhite;
     ctx.font = 'bold 32px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-    ctx.fillText('Mi Plan Nutricional', pad, 52);
+    ctx.fillText(userName ? 'Plan de ' + userName : 'Mi Plan Nutricional', pad, 52);
 
     var today = new Date();
     var dateStr = today.getDate() + '/' + (today.getMonth() + 1) + '/' + today.getFullYear();
