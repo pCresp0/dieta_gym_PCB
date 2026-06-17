@@ -793,6 +793,39 @@ document.querySelectorAll('.theme-toggle').forEach(function(btn) {
 applyTheme(getTheme());
 
 // ============================================================
+// COMPACT HEADER ON SCROLL
+// ============================================================
+(function() {
+    var header = null;
+    var isCompact = false;
+    var anchorY = 0;
+    var ignoreUntil = 0;
+
+    window.addEventListener('scroll', function() {
+        if (!header) header = document.querySelector('.header');
+        if (!header) return;
+        var now = Date.now();
+        if (now < ignoreUntil) return;
+        var y = window.scrollY;
+        if (!isCompact && y > 100 && y - anchorY > 30) {
+            header.classList.add('header-compact');
+            isCompact = true;
+            anchorY = y;
+            ignoreUntil = now + 150;
+        } else if (isCompact && (anchorY - y > 30 || y < 20)) {
+            header.classList.remove('header-compact');
+            isCompact = false;
+            anchorY = y;
+            ignoreUntil = now + 150;
+        } else if (!isCompact && y < anchorY) {
+            anchorY = y;
+        } else if (isCompact && y > anchorY) {
+            anchorY = y;
+        }
+    }, { passive: true });
+})();
+
+// ============================================================
 // INIT
 // ============================================================
 function init() {

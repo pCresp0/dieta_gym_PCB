@@ -187,6 +187,7 @@ body {
     top: 0;
     z-index: 100;
     box-shadow: var(--header-shadow);
+    transition: padding 0.3s ease;
 }
 
 .header-content {
@@ -203,6 +204,37 @@ body {
     margin-bottom: 12px;
     letter-spacing: -0.01em;
     opacity: 0.95;
+    transition: font-size 0.3s ease, margin 0.3s ease, max-height 0.3s ease, opacity 0.3s ease;
+    max-height: 40px;
+    overflow: hidden;
+}
+
+/* Compact header on scroll down */
+.header.header-compact {
+    padding: 6px 16px 8px;
+}
+
+.header.header-compact h1,
+.header.header-compact .reconfigure-btn,
+.header.header-compact .kcal-selector label,
+.header.header-compact .kcal-slider-wrapper,
+.header.header-compact .kcal-rec-label,
+.header.header-compact .kcal-warning {
+    display: none;
+}
+
+.header.header-compact .kcal-number {
+    font-size: 1.6rem;
+}
+
+.header.header-compact .kcal-btn {
+    width: 30px;
+    height: 30px;
+    font-size: 1.1rem;
+}
+
+.header.header-compact .kcal-selector {
+    gap: 2px;
 }
 
 .kcal-selector {
@@ -210,6 +242,7 @@ body {
     flex-direction: column;
     align-items: center;
     gap: 6px;
+    transition: gap 0.3s ease;
 }
 
 .kcal-selector label {
@@ -218,6 +251,9 @@ body {
     font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 0.08em;
+    transition: all 0.3s ease;
+    max-height: 20px;
+    overflow: hidden;
 }
 
 .kcal-controls {
@@ -239,7 +275,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all var(--transition);
+    transition: all 0.3s ease;
     -webkit-user-select: none;
     user-select: none;
     backdrop-filter: blur(4px);
@@ -268,6 +304,7 @@ body {
     min-width: 95px;
     text-align: center;
     text-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    transition: font-size 0.3s ease;
 }
 
 .kcal-unit {
@@ -284,6 +321,9 @@ body {
     width: 100%;
     max-width: 340px;
     margin-top: 4px;
+    transition: max-height 0.3s ease, opacity 0.3s ease, margin 0.3s ease;
+    max-height: 50px;
+    overflow: hidden;
 }
 
 .kcal-range-label {
@@ -327,6 +367,9 @@ body {
     opacity: 0.6;
     margin-top: 2px;
     font-weight: 500;
+    transition: all 0.3s ease;
+    max-height: 20px;
+    overflow: hidden;
 }
 
 #kcal-range::-webkit-slider-thumb {
@@ -2391,6 +2434,8 @@ body {
     line-height: 1.4;
     text-align: left;
     animation: tabFadeIn 0.2s ease;
+    transition: all 0.3s ease;
+    overflow: hidden;
 }
 
 .kcal-warning.warn-danger {
@@ -2424,10 +2469,12 @@ body {
     font-size: 0.7rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all var(--transition);
+    transition: all 0.3s ease;
     box-shadow: none;
     z-index: 10;
     margin: 0 auto 12px;
+    max-height: 40px;
+    overflow: hidden;
 }
 
 .reconfigure-btn:hover {
