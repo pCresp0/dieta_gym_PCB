@@ -101,7 +101,7 @@ function getExportFileName(prefix) {
 // - Recomp: 2.0-2.4 g/kg (near maintenance + training stimulus, Stokes 2018)
 // - Maintain: 1.6-2.2 g/kg (ISSN 2017 general athletes)
 // - Bulk: 1.6-2.0 g/kg (surplus is protein-sparing, Iraki 2019)
-var PROTEIN_TARGET_GPK = { cut:2.4, recomp:2.2, maintain:2.0, bulk:1.6 };
+var PROTEIN_TARGET_GPK = { cut:2.4, recomp:2.2, maintain:2.0, bulk:1.8 };
 var DEFAULT_PROTEIN_GPK = 2.0;
 
 // Reference kcal per slot (averages at base amounts) for unselected slots
