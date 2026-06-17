@@ -85,9 +85,43 @@ var userTdee = null;
 var selections = { breakfast:null, lunchCarb:null, lunchProtein:null, dinnerCarb:null, dinnerProtein:null };
 
 // ============================================================
-// SCALING
+// SCALING — dynamic ratio based on actual selection base kcal
 // ============================================================
-function getRatio() { return currentKcal / BASE_KCAL; }
+
+// Reference kcal per slot (averages at base amounts) for unselected slots
+var REF_SLOT_KCAL = { breakfast:455, lunchCarb:448, lunchProtein:227, dinnerCarb:346, dinnerProtein:223 };
+// Extras: verduras + aceite scale with ratio; fruta is fixed (1 piece per meal)
+var EXTRAS_SCALED_BASE = extrasNutr.verduras[0]*200/100 + extrasNutr.aceite[0]*EXTRAS_OIL_ML/100; // ~95
+var EXTRAS_FIXED_KCAL = extrasNutr.fruta[0]; // 80 per meal, not scaled
+var NUM_EXTRA_MEALS = 2; // lunch + dinner
+
+function getScaleableBaseKcal() {
+    var t = 0;
+    t += selections.breakfast !== null
+        ? breakfastOptions[selections.breakfast].macros[0]
+        : REF_SLOT_KCAL.breakfast;
+    t += selections.lunchCarb !== null
+        ? lunchCarbs[selections.lunchCarb].n[0] * lunchCarbs[selections.lunchCarb].base / 100
+        : REF_SLOT_KCAL.lunchCarb;
+    t += selections.lunchProtein !== null
+        ? lunchProteins[selections.lunchProtein].n[0] * lunchProteins[selections.lunchProtein].base / 100
+        : REF_SLOT_KCAL.lunchProtein;
+    t += EXTRAS_SCALED_BASE; // lunch verduras + aceite
+    t += selections.dinnerCarb !== null
+        ? dinnerCarbs[selections.dinnerCarb].n[0] * dinnerCarbs[selections.dinnerCarb].base / 100
+        : REF_SLOT_KCAL.dinnerCarb;
+    t += selections.dinnerProtein !== null
+        ? dinnerProteins[selections.dinnerProtein].n[0] * dinnerProteins[selections.dinnerProtein].base / 100
+        : REF_SLOT_KCAL.dinnerProtein;
+    t += EXTRAS_SCALED_BASE; // dinner verduras + aceite
+    return t;
+}
+
+function getRatio() {
+    var scaleBase = getScaleableBaseKcal();
+    if (scaleBase <= 0) return 1;
+    return (currentKcal - EXTRAS_FIXED_KCAL * NUM_EXTRA_MEALS) / scaleBase;
+}
 
 function scaleAmount(base, ratio) {
     if (base === null || base === undefined) return null;
