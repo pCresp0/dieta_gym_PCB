@@ -669,4 +669,127 @@ function renderValidator() {
     }
 }
 
+// ============================================================
+// TRAINER MODE (hidden, long-press on title)
+// ============================================================
+var trainerModeActive = false;
+
+function enterTrainerMode() {
+    trainerModeActive = true;
+    document.querySelector('.main').style.display = 'none';
+    document.querySelector('.header').style.display = 'none';
+    document.getElementById('trainer-mode').style.display = '';
+    renderTrainerContent();
+}
+
+function exitTrainerMode() {
+    trainerModeActive = false;
+    document.querySelector('.main').style.display = '';
+    document.querySelector('.header').style.display = '';
+    document.getElementById('trainer-mode').style.display = 'none';
+}
+
+function renderTrainerContent() {
+    var html = '';
+
+    // Desayunos
+    html += '<div class="trainer-section"><h3>☀️ Desayunos (elige 1)</h3>';
+    breakfastOptions.forEach(function(opt) {
+        html += '<div class="trainer-card"><div class="trainer-card-title">' + opt.name + '</div><ul>';
+        opt.items.forEach(function(item) {
+            var line = item.text;
+            if (item.amount !== null) line += ': <strong>' + item.amount + (item.unit || 'g') + '</strong>';
+            if (item.extra) {
+                var extraText = item.extra.replace(/\{(\d+)\}/, item.extraBase);
+                line += ' <span class="trainer-extra">' + extraText + '</span>';
+            }
+            html += '<li>' + line + '</li>';
+        });
+        html += '</ul></div>';
+    });
+    html += '</div>';
+
+    // Almuerzo
+    html += '<div class="trainer-section"><h3>🍲 Almuerzo</h3>';
+    html += '<div class="trainer-subsection"><h4>🌾 Hidratos (elige 1)</h4><table class="trainer-table"><tbody>';
+    lunchCarbs.forEach(function(item) {
+        html += '<tr><td>' + item.name + '</td><td><strong>' + item.base + (item.unit || 'g') + '</strong></td></tr>';
+        if (item.altName) html += '<tr class="trainer-alt"><td>' + item.altName + '</td><td><strong>' + item.altBase + (item.unit || 'g') + '</strong></td></tr>';
+    });
+    html += '</tbody></table></div>';
+    html += '<div class="trainer-subsection"><h4>🥩 Proteínas (elige 1)</h4><table class="trainer-table"><tbody>';
+    lunchProteins.forEach(function(item) {
+        html += '<tr><td>' + item.name + '</td><td><strong>' + item.base + (item.unit || 'g') + '</strong></td></tr>';
+    });
+    html += '</tbody></table></div>';
+    html += '<div class="trainer-extras">+ ~200g verduras | 15ml AOVE | 1 fruta</div>';
+    html += '</div>';
+
+    // Cena
+    html += '<div class="trainer-section"><h3>🌙 Cena</h3>';
+    html += '<div class="trainer-subsection"><h4>🌾 Hidratos (elige 1)</h4><table class="trainer-table"><tbody>';
+    dinnerCarbs.forEach(function(item) {
+        html += '<tr><td>' + item.name + '</td><td><strong>' + item.base + (item.unit || 'g') + '</strong></td></tr>';
+        if (item.altName) html += '<tr class="trainer-alt"><td>' + item.altName + '</td><td><strong>' + item.altBase + (item.unit || 'g') + '</strong></td></tr>';
+    });
+    html += '</tbody></table></div>';
+    html += '<div class="trainer-subsection"><h4>🥩 Proteínas (elige 1)</h4><table class="trainer-table"><tbody>';
+    dinnerProteins.forEach(function(item) {
+        html += '<tr><td>' + item.name + '</td><td><strong>' + item.base + (item.unit || 'g') + '</strong></td></tr>';
+    });
+    html += '</tbody></table></div>';
+    html += '<div class="trainer-extras">+ ~200g verduras | 15ml AOVE | 1 fruta</div>';
+    html += '</div>';
+
+    // Suplementos
+    html += '<div class="trainer-section"><h3>💊 Suplementación</h3><div class="trainer-supps">';
+    supplements.forEach(function(s) {
+        html += '<div class="trainer-supp">' + s.icon + ' <strong>' + s.title + '</strong> — ' + s.desc + '</div>';
+    });
+    html += '</div></div>';
+
+    document.getElementById('trainer-content').innerHTML = html;
+}
+
+// Long-press on h1 title to enter trainer mode
+(function() {
+    var timer = null;
+    var h1 = null;
+
+    function setup() {
+        h1 = document.querySelector('.header-content h1');
+        if (!h1) return;
+
+        h1.addEventListener('touchstart', function(e) {
+            timer = setTimeout(function() {
+                enterTrainerMode();
+            }, 1200);
+        });
+        h1.addEventListener('touchend', function() { clearTimeout(timer); });
+        h1.addEventListener('touchmove', function() { clearTimeout(timer); });
+
+        // Desktop: mousedown
+        h1.addEventListener('mousedown', function(e) {
+            timer = setTimeout(function() {
+                enterTrainerMode();
+            }, 1200);
+        });
+        h1.addEventListener('mouseup', function() { clearTimeout(timer); });
+        h1.addEventListener('mouseleave', function() { clearTimeout(timer); });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', setup);
+    } else {
+        setup();
+    }
+})();
+
+// Exit trainer mode button
+document.addEventListener('click', function(e) {
+    if (e.target.id === 'trainer-exit-btn' || e.target.closest('#trainer-exit-btn')) {
+        exitTrainerMode();
+    }
+});
+
 document.addEventListener('DOMContentLoaded', init);
