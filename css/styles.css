@@ -906,10 +906,64 @@ body {
 
 /* ========== FOOTER ========== */
 .footer {
+    background: #1E2430;
+    color: #8A93A6;
+    padding: 32px 16px 28px;
+    margin-top: 8px;
+}
+
+.footer-content {
+    max-width: var(--max-width);
+    margin: 0 auto;
     text-align: center;
-    padding: 18px 16px 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+}
+
+.footer-author {
+    font-size: 0.88rem;
+    color: #B8C0D0;
+    letter-spacing: -0.01em;
+}
+
+.footer-author strong {
+    color: #E2E8F0;
+    font-weight: 700;
+}
+
+.footer-socials {
+    display: flex;
+    gap: 12px;
+}
+
+.footer-social-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.08);
+    color: #8A93A6;
+    transition: all 0.25s ease;
+}
+
+.footer-social-link svg {
+    width: 18px;
+    height: 18px;
+}
+
+.footer-social-link:hover {
+    background: rgba(255,255,255,0.15);
+    color: #E2E8F0;
+    transform: translateY(-2px);
+}
+
+.footer-copy {
     font-size: 0.72rem;
-    color: var(--text-muted);
+    color: #5A6275;
 }
 
 /* ========== CALCULATOR ========== */
