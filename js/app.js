@@ -1489,6 +1489,7 @@ applyTheme(getTheme());
     var tabsNav = null;
     var isCompact = false;
     var ticking = false;
+    var cooldown = false;
 
     function updateTabsTop() {
         if (!tabsNav) tabsNav = document.querySelector('.main-tabs-nav');
@@ -1498,18 +1499,20 @@ applyTheme(getTheme());
 
     function onScroll() {
         if (!header) header = document.querySelector('.header');
-        if (!header) return;
+        if (!header || cooldown) return;
 
         var y = window.scrollY;
 
-        if (y > 60 && !isCompact) {
+        if (y > 80 && !isCompact) {
             header.classList.add('header-compact');
             isCompact = true;
-            setTimeout(updateTabsTop, 400);
-        } else if (y < 30 && isCompact) {
+            cooldown = true;
+            setTimeout(function() { cooldown = false; updateTabsTop(); }, 450);
+        } else if (y < 10 && isCompact) {
             header.classList.remove('header-compact');
             isCompact = false;
-            setTimeout(updateTabsTop, 400);
+            cooldown = true;
+            setTimeout(function() { cooldown = false; updateTabsTop(); }, 450);
         }
     }
 
