@@ -341,6 +341,25 @@ document.querySelectorAll('[data-toggle]').forEach(header => {
     });
 });
 
+// Meal tabs
+document.querySelectorAll('.meal-tab').forEach(tab => {
+    tab.addEventListener('click', function() {
+        const target = this.dataset.mealTab;
+
+        // Update tab buttons
+        document.querySelectorAll('.meal-tab').forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+
+        // Update tab content
+        document.querySelectorAll('.meal-tab-content').forEach(c => c.classList.remove('active'));
+        const content = document.getElementById('tab-' + target);
+        if (content) content.classList.add('active');
+
+        // Save active tab
+        try { localStorage.setItem('dietAppTab', target); } catch(e) {}
+    });
+});
+
 // ============================================================
 // PERSISTENCE (localStorage)
 // ============================================================
@@ -606,6 +625,15 @@ function init() {
     document.getElementById('kcal-range').value = currentKcal;
     renderAll();
     updateCalculatorResults();
+
+    // Restore saved tab
+    try {
+        const savedTab = localStorage.getItem('dietAppTab');
+        if (savedTab) {
+            const tabBtn = document.querySelector('.meal-tab[data-meal-tab="' + savedTab + '"]');
+            if (tabBtn) tabBtn.click();
+        }
+    } catch(e) {}
 }
 
 document.addEventListener('DOMContentLoaded', init);

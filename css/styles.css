@@ -303,6 +303,119 @@ body {
     font-size: 1.1rem;
 }
 
+/* ========== MEAL TABS ========== */
+.meals-tabbed-section {
+    overflow: visible;
+}
+
+.meal-tabs {
+    display: flex;
+    border-bottom: 2px solid var(--border);
+    background: #FAFAF5;
+}
+
+.meal-tab {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 14px 12px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    transition: all var(--transition);
+    position: relative;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.meal-tab::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: transparent;
+    border-radius: 3px 3px 0 0;
+    transition: background var(--transition);
+}
+
+.meal-tab:hover {
+    color: var(--text-secondary);
+    background: rgba(212,160,23,0.04);
+}
+
+.meal-tab.active {
+    color: var(--primary-dark);
+}
+
+.meal-tab.active::after {
+    background: var(--primary);
+}
+
+.tab-icon {
+    font-size: 1.15rem;
+}
+
+.tab-label {
+    font-size: 0.88rem;
+}
+
+.meal-tab-content {
+    display: none;
+}
+
+.meal-tab-content.active {
+    display: block;
+    animation: tabFadeIn 0.25s ease;
+}
+
+@keyframes tabFadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.tab-subtitle {
+    padding: 12px 20px 8px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+/* ========== DISCLAIMER ========== */
+.disclaimer {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 14px 18px;
+    background: #FFF8E1;
+    border: 1px solid #F0E0B0;
+    border-radius: var(--radius-sm);
+    margin-bottom: 16px;
+}
+
+.disclaimer-icon {
+    font-size: 1.2rem;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.disclaimer p {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin: 0;
+}
+
+.disclaimer strong {
+    color: var(--text-primary);
+}
+
 /* ========== BREAKFAST GRID ========== */
 .breakfast-grid {
     display: grid;

@@ -213,41 +213,47 @@
             </div>
         </section>
 
-        <!-- DESAYUNO / MERIENDA -->
-        <section class="meal-section" id="breakfast-section">
-            <div class="section-header" data-toggle="breakfast">
-                <h2><span class="section-icon">☀️</span> Desayuno / Merienda</h2>
-                <p class="section-subtitle">Elige una opción. Se puede acompañar con café o infusión.</p>
-                <span class="toggle-icon">▼</span>
+        <!-- PESTAÑAS DE COMIDAS -->
+        <section class="meal-section meals-tabbed-section" id="meals-section">
+            <div class="meal-tabs">
+                <button class="meal-tab active" data-meal-tab="breakfast">
+                    <span class="tab-icon">☀️</span>
+                    <span class="tab-label">Desayuno</span>
+                </button>
+                <button class="meal-tab" data-meal-tab="lunch">
+                    <span class="tab-icon">🍲</span>
+                    <span class="tab-label">Almuerzo</span>
+                </button>
+                <button class="meal-tab" data-meal-tab="dinner">
+                    <span class="tab-icon">🌙</span>
+                    <span class="tab-label">Cena</span>
+                </button>
             </div>
-            <div class="section-body open" id="breakfast-body">
+
+            <!-- TAB: DESAYUNO -->
+            <div class="meal-tab-content active" id="tab-breakfast">
+                <div class="tab-subtitle">
+                    Elige una opción. Se puede acompañar con café o infusión.
+                </div>
                 <div class="breakfast-grid" id="breakfast-grid"></div>
             </div>
-        </section>
 
-        <!-- ALMUERZO -->
-        <section class="meal-section" id="lunch-section">
-            <div class="section-header" data-toggle="lunch">
-                <h2><span class="section-icon">🍲</span> Almuerzo</h2>
-                <p class="section-subtitle">Elige un hidrato y una proteína. Añadir verduras (~<span class="scaled-veg-lunch">200</span>g), <span class="scaled-oil-lunch">5</span>ml aceite oliva y 1 fruta.</p>
-                <span class="toggle-icon">▼</span>
-            </div>
-            <div class="section-body open" id="lunch-body">
+            <!-- TAB: ALMUERZO -->
+            <div class="meal-tab-content" id="tab-lunch">
+                <div class="tab-subtitle">
+                    Elige un hidrato y una proteína.
+                </div>
                 <div class="extras-banner">
                     <span>+ ~<span class="scaled-veg-lunch">200</span>g verduras (verdes) &nbsp;|&nbsp; <span class="scaled-oil-lunch">5</span>ml aceite oliva &nbsp;|&nbsp; 1 fruta</span>
                 </div>
                 <div class="meal-tables" id="lunch-tables"></div>
             </div>
-        </section>
 
-        <!-- CENA -->
-        <section class="meal-section" id="dinner-section">
-            <div class="section-header" data-toggle="dinner">
-                <h2><span class="section-icon">🌙</span> Cena</h2>
-                <p class="section-subtitle">Elige un hidrato y una proteína. Añadir verduras (~<span class="scaled-veg-dinner">200</span>g), <span class="scaled-oil-dinner">5</span>ml aceite oliva y 1 fruta.</p>
-                <span class="toggle-icon">▼</span>
-            </div>
-            <div class="section-body open" id="dinner-body">
+            <!-- TAB: CENA -->
+            <div class="meal-tab-content" id="tab-dinner">
+                <div class="tab-subtitle">
+                    Elige un hidrato y una proteína.
+                </div>
                 <div class="extras-banner">
                     <span>+ ~<span class="scaled-veg-dinner">200</span>g verduras (verdes) &nbsp;|&nbsp; <span class="scaled-oil-dinner">5</span>ml aceite oliva &nbsp;|&nbsp; 1 fruta</span>
                 </div>
@@ -265,6 +271,12 @@
                 <div class="supplements-grid" id="supplements-list"></div>
             </div>
         </section>
+
+        <!-- DISCLAIMER -->
+        <div class="disclaimer">
+            <span class="disclaimer-icon">⚠️</span>
+            <p>Esta herramienta es <strong>orientativa</strong>. Las cantidades, cálculos de metabolismo basal y gasto calórico son estimaciones. Consulta siempre con un <strong>médico y/o nutricionista</strong> antes de iniciar o modificar cualquier plan de alimentación.</p>
+        </div>
 
     </main>
 
