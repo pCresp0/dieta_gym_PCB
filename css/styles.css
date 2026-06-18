@@ -2745,6 +2745,8 @@ body {
     font-size: 0.84rem;
     color: var(--text-secondary);
     line-height: 1.65;
+    max-height: 65vh;
+    overflow-y: auto;
 }
 
 .tooltip-modal-body strong {
@@ -4676,6 +4678,18 @@ body {
     border-radius: 8px;
     background: var(--card-bg, rgba(255,255,255,0.05));
     font-size: 0.82rem;
+}
+
+.macro-fix-selectable {
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+}
+.macro-fix-selectable:hover {
+    background: rgba(243, 156, 18, 0.15);
+    transform: scale(1.01);
+}
+.macro-fix-selectable:active {
+    transform: scale(0.98);
 }
 
 .macro-fix-meal {

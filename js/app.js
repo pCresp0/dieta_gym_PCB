@@ -2862,6 +2862,18 @@ document.addEventListener('click', function(e) {
     }
     if (e.target.id==='tooltip-overlay'){document.getElementById('tooltip-overlay').style.display='none';return;}
     if (e.target.id==='tooltip-close'||e.target.closest('#tooltip-close')){document.getElementById('tooltip-overlay').style.display='none';return;}
+    // Apply macro fix suggestion
+    var fixItem = e.target.closest('.macro-fix-selectable');
+    if (fixItem) {
+        var key = fixItem.dataset.fixKey;
+        var idx = parseInt(fixItem.dataset.fixIdx);
+        if (key && !isNaN(idx)) {
+            trainerSelections[key] = idx;
+            document.getElementById('tooltip-overlay').style.display = 'none';
+            renderTrainerContent();
+        }
+        return;
+    }
 });
 
 // ============================================================
@@ -3502,7 +3514,7 @@ function generateMacroSuggestions(macro) {
     }
 
     // Evaluate swaps for a given slot
-    function evalSwaps(data, currentIdx, meal, slotName, mealKey) {
+    function evalSwaps(data, currentIdx, meal, slotName, mealKey, selKey) {
         if (currentIdx === null) return;
         var currentItem = data[currentIdx];
         var curKcal = itemKcal(currentItem);
@@ -3519,6 +3531,7 @@ function generateMacroSuggestions(macro) {
                 suggestions.push({
                     type: 'swap', meal: meal, slot: slotName,
                     from: currentItem.name, to: alt.name,
+                    toIdx: idx, selKey: selKey,
                     diff: Math.round(macroDiff),
                     kcalDiff: Math.round(kcalDiff)
                 });
@@ -3539,6 +3552,7 @@ function generateMacroSuggestions(macro) {
                 suggestions.push({
                     type: 'swap', meal: 'Desayuno', slot: '',
                     from: currentBrk.name, to: alt.name,
+                    toIdx: idx, selKey: 'breakfast',
                     diff: Math.round(macroDiff),
                     kcalDiff: Math.round(kcalDiff)
                 });
@@ -3546,10 +3560,10 @@ function generateMacroSuggestions(macro) {
         });
     }
 
-    evalSwaps(lunchCarbs, trainerSelections.lunchCarb, 'Comida', 'hidrato', 'lunch');
-    evalSwaps(lunchProteins, trainerSelections.lunchProtein, 'Comida', 'proteína', 'lunch');
-    evalSwaps(dinnerCarbs, trainerSelections.dinnerCarb, 'Cena', 'hidrato', 'dinner');
-    evalSwaps(dinnerProteins, trainerSelections.dinnerProtein, 'Cena', 'proteína', 'dinner');
+    evalSwaps(lunchCarbs, trainerSelections.lunchCarb, 'Comida', 'hidrato', 'lunch', 'lunchCarb');
+    evalSwaps(lunchProteins, trainerSelections.lunchProtein, 'Comida', 'proteína', 'lunch', 'lunchProtein');
+    evalSwaps(dinnerCarbs, trainerSelections.dinnerCarb, 'Cena', 'hidrato', 'dinner', 'dinnerCarb');
+    evalSwaps(dinnerProteins, trainerSelections.dinnerProtein, 'Cena', 'proteína', 'dinner', 'dinnerProtein');
 
     // Score and sort swaps: prefer high macro gain with low kcal change
     suggestions.forEach(function(s) {
@@ -3583,8 +3597,17 @@ function generateMacroSuggestions(macro) {
         addSuggestions.sort(function(a, b) { return a.kcalAdd - b.kcalAdd; });
     }
 
-    // Combine: top 6 swaps + top 3 adds
-    var finalSwaps = suggestions.slice(0, 6);
+    // Combine: top 3 swaps per meal + top 3 adds
+    var mealGroups = {};
+    suggestions.forEach(function(s) {
+        if (!mealGroups[s.meal]) mealGroups[s.meal] = [];
+        mealGroups[s.meal].push(s);
+    });
+    var finalSwaps = [];
+    Object.keys(mealGroups).forEach(function(meal) {
+        mealGroups[meal].sort(function(a, b) { return b.score - a.score; });
+        finalSwaps = finalSwaps.concat(mealGroups[meal].slice(0, 3));
+    });
     var finalAdds = addSuggestions.slice(0, 3);
 
     return { macro: macroLabel, deficit: Math.round(deficit), swaps: finalSwaps, adds: finalAdds };
@@ -3599,20 +3622,27 @@ function showMacroFixTooltip(macro) {
         html = '<p>No hay sugerencias disponibles con la selecci\u00f3n actual.</p>';
     } else {
         if (data.swaps.length > 0) {
-            html += '<h4 style="margin-top:0">\ud83d\udd04 Cambios posibles</h4><div class="macro-fix-list">';
-            data.swaps.forEach(function(s) {
-                var kcalLabel = s.kcalDiff === 0 ? '<span class="macro-fix-kcal neutral">=kcal</span>' :
-                    (Math.abs(s.kcalDiff) <= 30 ? '<span class="macro-fix-kcal neutral">' + (s.kcalDiff > 0 ? '+' : '') + s.kcalDiff + ' kcal</span>' :
-                    '<span class="macro-fix-kcal ' + (s.kcalDiff > 0 ? 'high' : 'low') + '">' + (s.kcalDiff > 0 ? '+' : '') + s.kcalDiff + ' kcal</span>');
-                html += '<div class="macro-fix-item"><span class="macro-fix-meal">' + s.meal + (s.slot ? ' (' + s.slot + ')' : '') + '</span>' +
-                    '<span class="macro-fix-swap">' + s.from + ' \u2192 <strong>' + s.to + '</strong></span>' +
-                    '<span class="macro-fix-stats"><span class="macro-fix-diff">+' + s.diff + 'g</span>' + kcalLabel + '</span></div>';
+            // Group swaps by meal
+            var meals = ['Desayuno', 'Comida', 'Cena'];
+            meals.forEach(function(mealName) {
+                var mealSwaps = data.swaps.filter(function(s) { return s.meal === mealName; });
+                if (mealSwaps.length === 0) return;
+                var emoji = mealName === 'Desayuno' ? '\u2600\ufe0f' : (mealName === 'Comida' ? '\ud83c\udf5d' : '\ud83c\udf19');
+                html += '<h4 style="margin-top:' + (mealName === 'Desayuno' ? '0' : '12px') + '">' + emoji + ' ' + mealName + '</h4><div class="macro-fix-list">';
+                mealSwaps.forEach(function(s) {
+                    var kcalLabel = s.kcalDiff === 0 ? '<span class="macro-fix-kcal neutral">=kcal</span>' :
+                        (Math.abs(s.kcalDiff) <= 30 ? '<span class="macro-fix-kcal neutral">' + (s.kcalDiff > 0 ? '+' : '') + s.kcalDiff + ' kcal</span>' :
+                        '<span class="macro-fix-kcal ' + (s.kcalDiff > 0 ? 'high' : 'low') + '">' + (s.kcalDiff > 0 ? '+' : '') + s.kcalDiff + ' kcal</span>');
+                    html += '<div class="macro-fix-item macro-fix-selectable" data-fix-key="' + s.selKey + '" data-fix-idx="' + s.toIdx + '">' +
+                        '<span class="macro-fix-swap">' + s.from + ' \u2192 <strong>' + s.to + '</strong>' + (s.slot ? ' <small>(' + s.slot + ')</small>' : '') + '</span>' +
+                        '<span class="macro-fix-stats"><span class="macro-fix-diff">+' + s.diff + 'g</span>' + kcalLabel + '</span></div>';
+                });
+                html += '</div>';
             });
-            html += '</div>';
         }
 
         if (data.adds.length > 0) {
-            html += '<h4>\u2795 A\u00f1adir alimento extra</h4><div class="macro-fix-list">';
+            html += '<h4 style="margin-top:12px">\u2795 A\u00f1adir alimento extra</h4><div class="macro-fix-list">';
             data.adds.forEach(function(s) {
                 html += '<div class="macro-fix-item"><span class="macro-fix-add">A\u00f1adir <strong>' + s.grams + 'g ' + s.food + '</strong></span>' +
                     '<span class="macro-fix-stats"><span class="macro-fix-diff">+' + s.diff + 'g</span><span class="macro-fix-kcal">' + (s.kcalAdd > 0 ? '+' : '') + s.kcalAdd + ' kcal</span></span></div>';
