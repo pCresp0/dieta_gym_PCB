@@ -2318,6 +2318,13 @@ function renderValidator() {
     var bar = document.getElementById('selection-validator');
     if (!bar) return;
 
+    // Don't show during onboarding or trainer mode
+    var onboarding = document.getElementById('onboarding');
+    if (trainerModeActive || (onboarding && onboarding.style.display !== 'none')) {
+        bar.classList.add('hidden');
+        return;
+    }
+
     var checks = [
         { key: 'breakfast', label: 'Desayuno', done: selections.breakfast !== null },
         { key: 'lunchCarb', label: 'Comida HC', done: selections.lunchCarb !== null },
@@ -2531,6 +2538,7 @@ function enterTrainerMode() {
     document.querySelector('.main').style.display = 'none';
     document.querySelector('.header').style.display = 'none';
     document.getElementById('trainer-mode').style.display = '';
+    document.getElementById('selection-validator').classList.add('hidden');
     renderTrainerContent();
 }
 
@@ -2539,6 +2547,8 @@ function exitTrainerMode() {
     document.querySelector('.main').style.display = '';
     document.querySelector('.header').style.display = '';
     document.getElementById('trainer-mode').style.display = 'none';
+    document.getElementById('selection-validator').classList.remove('hidden');
+    renderValidator();
 }
 
 function calculateTrainerMacros() {
@@ -2689,6 +2699,45 @@ function renderTrainerContent() {
     document.getElementById('trainer-content').innerHTML = html;
     renderTrainerNutrition();
     renderTrainerDietSummary();
+    renderTrainerValidator();
+}
+
+function renderTrainerValidator() {
+    var bar = document.getElementById('trainer-validator');
+    if (!bar) return;
+
+    var checks = [
+        { label: 'Desayuno', done: trainerSelections.breakfast !== null },
+        { label: 'Comida HC', done: trainerSelections.lunchCarb !== null },
+        { label: 'Comida Prot', done: trainerSelections.lunchProtein !== null },
+        { label: 'Cena HC', done: trainerSelections.dinnerCarb !== null },
+        { label: 'Cena Prot', done: trainerSelections.dinnerProtein !== null }
+    ];
+
+    var allDone = checks.every(function(c) { return c.done; });
+    var noneDone = checks.every(function(c) { return !c.done; });
+
+    if (noneDone) {
+        bar.classList.add('hidden');
+        return;
+    }
+
+    bar.classList.remove('hidden');
+
+    if (allDone) {
+        bar.classList.add('complete');
+        var macros = calculateTrainerMacros();
+        var kcal = macros ? Math.round(macros.kcal) : 2500;
+        bar.innerHTML = '<div class="validator-complete"><span>✅ Plan completo</span><span class="vc-kcal">— ' + kcal + ' kcal</span></div>';
+    } else {
+        bar.classList.remove('complete');
+        var items = checks.map(function(c) {
+            var cls = c.done ? 'validator-item done' : 'validator-item missing';
+            var icon = c.done ? '✓' : '○';
+            return '<span class="' + cls + '"><span class="vi-icon">' + icon + '</span>' + c.label + '</span>';
+        }).join('');
+        bar.innerHTML = '<div class="validator-items">' + items + '</div>';
+    }
 }
 
 // Trainer toggle button
@@ -2696,8 +2745,25 @@ document.getElementById('trainer-toggle').addEventListener('click', function() {
     enterTrainerMode();
 });
 
-// Trainer selection clicks
+// Trainer selection — prevent scroll-triggered selections on mobile
+var trainerTouchStartY = 0;
+var trainerTouchMoved = false;
+
+document.getElementById('trainer-mode').addEventListener('touchstart', function(e) {
+    trainerTouchStartY = e.touches[0].clientY;
+    trainerTouchMoved = false;
+}, { passive: true });
+
+document.getElementById('trainer-mode').addEventListener('touchmove', function(e) {
+    if (Math.abs(e.touches[0].clientY - trainerTouchStartY) > 10) {
+        trainerTouchMoved = true;
+    }
+}, { passive: true });
+
 document.addEventListener('click', function(e) {
+    // Skip if this was a scroll gesture on mobile
+    if (trainerTouchMoved) { trainerTouchMoved = false; return; }
+
     // Breakfast cards
     var card = e.target.closest('[data-trainer-type="breakfast"]');
     if (card) {

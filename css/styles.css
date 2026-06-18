@@ -3694,7 +3694,7 @@ body {
 
 /* ========== TRAINER MODE (hidden) ========== */
 .trainer-mode {
-    padding: 20px 16px 40px;
+    padding: 20px 16px 60px;
     max-width: var(--max-width);
     margin: 0 auto;
 }
@@ -3906,6 +3906,35 @@ body {
 .trainer-nutrition {
     margin-top: 24px;
     animation: tabFadeIn 0.25s ease;
+}
+
+.trainer-validator {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 900;
+    padding: 10px 16px;
+    background: var(--card-bg);
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -2px 12px rgba(0,0,0,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    font-size: 0.78rem;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.trainer-validator.hidden {
+    transform: translateY(100%);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.trainer-validator.complete {
+    background: var(--ob-highlight-bg);
+    border-top-color: var(--ob-highlight-border);
 }
 
 /* ========== RESPONSIVE ONBOARDING ========== */
