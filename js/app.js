@@ -3709,7 +3709,18 @@ function checkAutoAdvanceTrainer() {
     if (allComplete) {
         setTimeout(function() {
             showMealCompleteToast('¡Dieta completa! Aquí tienes tu resumen');
-            var summary = document.getElementById('trainer-nutrition');
+            // Remove scroll handler that fights with our scroll, hide tabs permanently
+            if (trainerTabsScrollHandler) {
+                window.removeEventListener('scroll', trainerTabsScrollHandler);
+                trainerTabsScrollHandler = null;
+            }
+            var tabsNav = document.querySelector('.trainer-tabs-nav');
+            if (tabsNav) {
+                tabsNav.style.transition = 'none';
+                tabsNav.classList.add('tabs-hidden');
+                tabsNav.offsetHeight; // force reflow
+                tabsNav.style.transition = '';
+            }
             var summary = document.getElementById('trainer-nutrition');
             if (summary) {
                 var top = summary.getBoundingClientRect().top + window.pageYOffset - 16;
