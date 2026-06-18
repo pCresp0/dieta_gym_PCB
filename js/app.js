@@ -805,28 +805,40 @@ function validateStep1() {
 }
 
 // Age warnings
-document.getElementById('calc-age').addEventListener('input', function() {
-    if (this.value.length > 3) this.value = this.value.slice(0, 3);
+(function() {
+    var ageInput = document.getElementById('calc-age');
     var hint = document.getElementById('age-hint');
-    var val = parseInt(this.value);
-    if (val && val > 0 && val < 18) {
-        hint.innerHTML = '⚠️ Para menores de 18 años, el cuerpo está en pleno desarrollo y las necesidades nutricionales son diferentes. ' +
-            'Te recomendamos consultar con un médico o nutricionista especializado en adolescentes antes de seguir cualquier plan de alimentación.';
-        hint.classList.add('age-warning');
-        hint.classList.remove('age-elder');
-    } else if (val && val > 99) {
-        hint.innerHTML = '🎉 ¡' + val + ' años! Enhorabuena, de verdad — llegar hasta aquí es un logro increíble y dice mucho de ti. ' +
-            'Ninguna app de nutrición puede mejorar lo que tus años de vida ya demuestran. ' +
-            'Sigue disfrutando de la vida como hasta ahora y hazle caso a tu médico, que es quien mejor te conoce. ' +
-            '¡Eres una inspiración! 💪';
-        hint.classList.remove('age-warning');
-        hint.classList.add('age-elder');
-    } else {
+
+    // Limit to 3 digits while typing
+    ageInput.addEventListener('input', function() {
+        if (this.value.length > 3) this.value = this.value.slice(0, 3);
+        // Clear warning while typing so it doesn't flash
         hint.textContent = '';
         hint.classList.remove('age-warning', 'age-elder');
-    }
-    estimateBodyFatFromBMI();
-});
+        estimateBodyFatFromBMI();
+    });
+
+    // Show warnings only on blur (when user finishes typing)
+    ageInput.addEventListener('blur', function() {
+        var val = parseInt(this.value);
+        if (val && val > 0 && val < 18) {
+            hint.innerHTML = '⚠️ Para menores de 18 años, el cuerpo está en pleno desarrollo y las necesidades nutricionales son diferentes. ' +
+                'Te recomendamos consultar con un médico o nutricionista especializado en adolescentes antes de seguir cualquier plan de alimentación.';
+            hint.classList.add('age-warning');
+            hint.classList.remove('age-elder');
+        } else if (val && val > 99) {
+            hint.innerHTML = '🎉 ¡' + val + ' años! Enhorabuena, de verdad — llegar hasta aquí es un logro increíble y dice mucho de ti. ' +
+                'Ninguna app de nutrición puede mejorar lo que tus años de vida ya demuestran. ' +
+                'Sigue disfrutando de la vida como hasta ahora y hazle caso a tu médico, que es quien mejor te conoce. ' +
+                '¡Eres una inspiración! 💪';
+            hint.classList.remove('age-warning');
+            hint.classList.add('age-elder');
+        } else {
+            hint.textContent = '';
+            hint.classList.remove('age-warning', 'age-elder');
+        }
+    });
+})();
 
 // BMI → Body Fat estimation (Deurenberg et al., 1991)
 function estimateBodyFatFromBMI() {
