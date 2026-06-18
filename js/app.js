@@ -862,11 +862,32 @@ function showStep(n) {
     });
 }
 
+function highlightInvalidFields(ids) {
+    ids.forEach(function(id) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        el.classList.add('field-error');
+        el.addEventListener('change', function handler() {
+            el.classList.remove('field-error');
+            el.removeEventListener('change', handler);
+        });
+        el.addEventListener('input', function handler() {
+            el.classList.remove('field-error');
+            el.removeEventListener('input', handler);
+        });
+    });
+}
+
 function validateStep1() {
     var age = document.getElementById('calc-age').value;
     var h = document.getElementById('calc-height').value;
     var w = document.getElementById('calc-weight').value;
-    return age && h && w && parseFloat(age) >= 18 && parseFloat(age) <= 99 && parseFloat(h) > 0 && parseFloat(w) > 0;
+    var invalid = [];
+    if (!age || parseFloat(age) < 18 || parseFloat(age) > 99) invalid.push('calc-age');
+    if (!h || parseFloat(h) <= 0) invalid.push('calc-height');
+    if (!w || parseFloat(w) <= 0) invalid.push('calc-weight');
+    if (invalid.length) highlightInvalidFields(invalid);
+    return invalid.length === 0;
 }
 
 // Age warnings
@@ -983,8 +1004,35 @@ document.getElementById('calc-weight').addEventListener('input', estimateBodyFat
 document.getElementById('calc-muscularity').addEventListener('change', estimateBodyFatFromBMI);
 document.getElementById('calc-experience').addEventListener('change', estimateBodyFatFromBMI);
 
+function validateStep2() {
+    var exp = document.getElementById('calc-experience').value;
+    var musc = document.getElementById('calc-muscularity').value;
+    var invalid = [];
+    if (exp === '') invalid.push('calc-experience');
+    if (musc === '') invalid.push('calc-muscularity');
+    if (invalid.length) highlightInvalidFields(invalid);
+    return invalid.length === 0;
+}
+
+function validateStep3() {
+    var diet = document.getElementById('calc-diet-history').value;
+    var appetite = document.getElementById('calc-appetite').value;
+    var invalid = [];
+    if (diet === '') invalid.push('calc-diet-history');
+    if (appetite === '') invalid.push('calc-appetite');
+    if (invalid.length) highlightInvalidFields(invalid);
+    return invalid.length === 0;
+}
+
 function validateStep4() {
-    return document.getElementById('calc-activity').value !== '';
+    var activity = document.getElementById('calc-activity').value;
+    var stepsUnknown = document.getElementById('calc-steps-unknown').checked;
+    var stepsVal = document.getElementById('calc-steps').value;
+    var invalid = [];
+    if (activity === '') invalid.push('calc-activity');
+    if (!stepsUnknown && !stepsVal) invalid.push('calc-steps');
+    if (invalid.length) highlightInvalidFields(invalid);
+    return invalid.length === 0;
 }
 
 // Recommend goal based on body fat %
@@ -1102,20 +1150,30 @@ document.getElementById('next-1').addEventListener('click', function() {
         showAppAlert('¡' + age + ' años! Eres un ejemplo de vida. Sinceramente, no necesitas ninguna app — lo que has hecho hasta ahora te ha funcionado de maravilla. Sigue disfrutando y haciéndole caso a tu médico. ¡Larga vida! 🎉');
         return;
     }
-    if (!validateStep1()) { showAppAlert('Rellena todos los campos: edad, altura y peso.'); return; }
+    if (!validateStep1()) { showAppAlert('Rellena todos los campos (edad, altura y peso) para continuar.'); return; }
     userName = (document.getElementById('calc-name').value || '').trim();
     showStep(2);
 });
 
 document.getElementById('back-2').addEventListener('click', function() { showStep(1); });
-document.getElementById('next-2').addEventListener('click', function() { showStep(3); });
+document.getElementById('next-2').addEventListener('click', function() {
+    if (!validateStep2()) { showAppAlert('Rellena todos los campos para continuar: experiencia de entrenamiento y nivel de masa muscular.'); return; }
+    showStep(3);
+});
 
 document.getElementById('back-3').addEventListener('click', function() { showStep(2); });
-document.getElementById('next-3').addEventListener('click', function() { showStep(4); });
+document.getElementById('next-3').addEventListener('click', function() {
+    if (!validateStep3()) { showAppAlert('Rellena todos los campos para continuar: historial de dietas y nivel de apetito.'); return; }
+    showStep(4);
+});
 
 document.getElementById('back-4').addEventListener('click', function() { showStep(3); });
 document.getElementById('next-4').addEventListener('click', function() {
-    if (!validateStep4()) { showAppAlert('Selecciona tu nivel de actividad diaria.'); return; }
+    if (!validateStep4()) {
+        var activity = document.getElementById('calc-activity').value;
+        if (activity === '') { showAppAlert('Rellena todos los campos para continuar.'); return; }
+        showAppAlert('Indica tu media de pasos diarios o marca "No lo sé".'); return;
+    }
     showGoalRecommendation();
     showStep(5);
 });
