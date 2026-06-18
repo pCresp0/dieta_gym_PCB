@@ -1758,6 +1758,48 @@ document.getElementById('start-plan').addEventListener('click', function() {
     }
 });
 
+// Dev skip button — fill dummy data and jump to app
+document.getElementById('dev-skip-btn').addEventListener('click', function() {
+    document.getElementById('calc-name').value = 'Pablo';
+    document.getElementById('calc-sex').value = 'male';
+    document.getElementById('calc-age').value = '32';
+    document.getElementById('calc-height').value = '174';
+    document.getElementById('calc-weight').value = '82';
+    document.getElementById('calc-experience').value = 'intermediate';
+    document.getElementById('calc-muscularity').value = 'normal';
+    document.getElementById('calc-bf').value = '20';
+    document.getElementById('calc-diet-history').value = 'tried';
+    document.getElementById('calc-appetite').value = 'normal';
+    document.getElementById('calc-alcohol').value = 'none';
+    document.getElementById('calc-activity').value = '1.375';
+    document.getElementById('calc-steps').value = '8000';
+    document.getElementById('calc-trains').value = 'yes';
+    document.getElementById('calc-training-details').classList.remove('hidden');
+    document.getElementById('calc-train-type').value = 'strength';
+    document.getElementById('calc-train-days').value = '4';
+    document.getElementById('calc-train-duration').value = '60';
+    document.getElementById('calc-train-intensity').value = 'medium';
+    userName = 'Pablo';
+    userGoal = 'recomp';
+    var result = calculateTDEE();
+    if (result) {
+        userTdee = result.tdee;
+        recommendedKcal = getRecommendedKcal(result.tdee, userGoal);
+        currentKcal = recommendedKcal;
+    }
+    document.getElementById('onboarding').style.display = 'none';
+    document.getElementById('app-wrapper').style.display = '';
+    document.getElementById('selection-validator').classList.remove('hidden');
+    document.getElementById('kcal-display').textContent = currentKcal;
+    window.scrollTo(0, 0);
+    updateSliderRange();
+    renderAll();
+    activateTab('breakfast');
+    populateDisclaimer();
+    populateBodyTimeline();
+    saveAllState();
+});
+
 document.getElementById('welcome-modal-ok').addEventListener('click', function() {
     document.getElementById('welcome-modal').style.display = 'none';
     localStorage.setItem('welcomeModalSeen', '1');
