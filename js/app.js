@@ -1996,6 +1996,12 @@ function checkAutoAdvancePublic() {
             showMealCompleteToast('Comida completa — vamos con la cena');
             activateTab('dinner', true);
         }, 400);
+    } else if (currentTab === 'dinner' && selections.dinnerCarb !== null && selections.dinnerProtein !== null) {
+        setTimeout(function() {
+            showMealCompleteToast('¡Dieta completa! Aquí tienes tu resumen');
+            var summary = document.getElementById('nutrition-summary');
+            if (summary) summary.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 400);
     }
 }
 
@@ -3614,6 +3620,12 @@ function checkAutoAdvanceTrainer() {
         setTimeout(function() {
             showMealCompleteToast('Comida completa — vamos con la cena');
             switchTrainerTab('dinner');
+        }, 400);
+    } else if (currentTrainerTab === 'dinner' && trainerSelections.dinnerCarb !== null && trainerSelections.dinnerProtein !== null) {
+        setTimeout(function() {
+            showMealCompleteToast('¡Dieta completa! Aquí tienes tu resumen');
+            var summary = document.getElementById('trainer-nutrition');
+            if (summary) summary.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }, 400);
     }
 }
