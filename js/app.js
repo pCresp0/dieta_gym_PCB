@@ -3209,8 +3209,30 @@ var TRAINER_KCAL_TOLERANCE = 100; // ±100 kcal
 // Target macro split (based on trainer plan average: 27% P, 52% C, 21% F)
 var TRAINER_MACRO_TARGETS = { protein: 27, carbs: 52, fat: 21 };
 
+function getTrainerTabByTime() {
+    var h = new Date().getHours();
+    if (h >= 1 && h < 12) return 'breakfast';
+    if (h >= 12 && h < 18) return 'lunch';
+    return 'dinner'; // 18-24 or 0
+}
+
+var currentTrainerTab = getTrainerTabByTime();
+
+function switchTrainerTab(tab) {
+    currentTrainerTab = tab;
+    // Update tab buttons
+    document.querySelectorAll('.trainer-tab').forEach(function(btn) {
+        btn.classList.toggle('active', btn.dataset.trainerTab === tab);
+    });
+    // Update tab panels
+    document.querySelectorAll('.trainer-tab-panel').forEach(function(panel) {
+        panel.classList.toggle('active', panel.dataset.trainerPanel === tab);
+    });
+}
+
 function enterTrainerMode() {
     trainerModeActive = true;
+    currentTrainerTab = getTrainerTabByTime();
     document.querySelector('.main').style.display = 'none';
     document.querySelector('.header').style.display = 'none';
     document.getElementById('trainer-mode').style.display = '';
@@ -3356,8 +3378,12 @@ function renderMacroTargetItem(label, cls, current, target, remain) {
 function renderTrainerContent() {
     var html = '';
 
+    // ===== TAB: Desayuno =====
+    var brkActive = currentTrainerTab === 'breakfast' ? ' active' : '';
+    html += '<div class="trainer-tab-panel' + brkActive + '" data-trainer-panel="breakfast">';
+
     // Desayunos
-    html += '<div class="trainer-section"><h3>\u2600\ufe0f Desayunos (elige 1)</h3>';
+    html += '<div class="trainer-section"><h3>☀️ Desayunos (elige 1)</h3>';
     breakfastOptions.forEach(function(opt, idx) {
         var sel = trainerSelections.breakfast === idx ? ' trainer-card-selected' : '';
         html += '<div class="trainer-card'+sel+'" data-trainer-type="breakfast" data-trainer-index="'+idx+'"><div class="trainer-card-title">' + opt.name + '</div><ul>';
@@ -3374,6 +3400,12 @@ function renderTrainerContent() {
     });
     html += '</div>';
 
+    html += '</div>'; // end breakfast panel
+
+    // ===== TAB: Comida =====
+    var lunchActive = currentTrainerTab === 'lunch' ? ' active' : '';
+    html += '<div class="trainer-tab-panel' + lunchActive + '" data-trainer-panel="lunch">';
+
     // Comida
     html += '<div class="trainer-section"><h3>\ud83c\udf72 Comida</h3>';
     html += '<div class="trainer-subsection"><h4>\ud83c\udf3e Hidratos (elige 1)</h4><table class="trainer-table"><tbody>';
@@ -3386,7 +3418,7 @@ function renderTrainerContent() {
         }
     });
     html += '</tbody></table></div>';
-    html += '<div class="trainer-subsection"><h4>\ud83e\udd69 Prote\u00ednas (elige 1)</h4><table class="trainer-table"><tbody>';
+    html += '<div class="trainer-subsection"><h4>\ud83e\udd69 Proteínas (elige 1)</h4><table class="trainer-table"><tbody>';
     lunchProteins.forEach(function(item, idx) {
         var sel = trainerSelections.lunchProtein === idx ? ' class="trainer-row-selected"' : '';
         html += '<tr'+sel+' data-trainer-meal="lunch" data-trainer-type="protein" data-trainer-index="'+idx+'"><td>' + item.name + '</td><td><strong>' + item.base + (item.unit || 'g') + '</strong></td></tr>';
@@ -3394,6 +3426,12 @@ function renderTrainerContent() {
     html += '</tbody></table></div>';
     html += '<div class="trainer-extras">+ ~200g verduras | '+EXTRAS_OIL_ML+'ml AOVE | 1 fruta</div>';
     html += '</div>';
+
+    html += '</div>'; // end lunch panel
+
+    // ===== TAB: Cena =====
+    var dinnerActive = currentTrainerTab === 'dinner' ? ' active' : '';
+    html += '<div class="trainer-tab-panel' + dinnerActive + '" data-trainer-panel="dinner">';
 
     // Cena
     html += '<div class="trainer-section"><h3>\ud83c\udf19 Cena</h3>';
@@ -3407,7 +3445,7 @@ function renderTrainerContent() {
         }
     });
     html += '</tbody></table></div>';
-    html += '<div class="trainer-subsection"><h4>\ud83e\udd69 Prote\u00ednas (elige 1)</h4><table class="trainer-table"><tbody>';
+    html += '<div class="trainer-subsection"><h4>\ud83e\udd69 Proteínas (elige 1)</h4><table class="trainer-table"><tbody>';
     dinnerProteins.forEach(function(item, idx) {
         var sel = trainerSelections.dinnerProtein === idx ? ' class="trainer-row-selected"' : '';
         html += '<tr'+sel+' data-trainer-meal="dinner" data-trainer-type="protein" data-trainer-index="'+idx+'"><td>' + item.name + '</td><td><strong>' + item.base + (item.unit || 'g') + '</strong></td></tr>';
@@ -3416,9 +3454,11 @@ function renderTrainerContent() {
     html += '<div class="trainer-extras">+ ~200g verduras | '+EXTRAS_OIL_ML+'ml AOVE | 1 fruta</div>';
     html += '</div>';
 
-    // Alimentos adicionales
+    html += '</div>'; // end dinner panel
+
+    // Alimentos adicionales (siempre visible, fuera de tabs)
     html += '<div class="trainer-section"><h3>\ud83c\udf7d\ufe0f Alimentos adicionales</h3>';
-    html += '<p class="trainer-extras-desc">A\u00f1ade alimentos extra para cuadrar macros en d\u00edas fuera de rutina.</p>';
+    html += '<p class="trainer-extras-desc">Añade alimentos extra para cuadrar macros en días fuera de rutina.</p>';
     html += '<div class="trainer-extra-form">';
     html += '<select class="trainer-extra-select" id="trainer-extra-food">';
     var lastCat = '';
@@ -3434,7 +3474,7 @@ function renderTrainerContent() {
     html += '</select>';
     html += '<div class="trainer-extra-grams-row">';
     html += '<input type="number" id="trainer-extra-grams" class="trainer-extra-grams" min="1" max="2000" placeholder="Gramos" value="100">';
-    html += '<button class="trainer-extra-add-btn" id="trainer-extra-add">+ A\u00f1adir</button>';
+    html += '<button class="trainer-extra-add-btn" id="trainer-extra-add">+ Añadir</button>';
     html += '</div></div>';
     if (trainerExtraFoods.length > 0) {
         html += '<div class="trainer-extra-list">';
@@ -3446,24 +3486,28 @@ function renderTrainerContent() {
             var ef = Math.round(food.n[3]*extra.grams/100);
             html += '<div class="trainer-extra-item" data-extra-idx="'+i+'">';
             html += '<div class="trainer-extra-item-info">';
-            html += '<strong>' + food.name + '</strong> \u2014 ' + extra.grams + food.unit;
-            html += '<span class="trainer-extra-item-macros">' + ek + ' kcal \u00b7 P:' + ep + ' C:' + ec + ' G:' + ef + '</span>';
+            html += '<strong>' + food.name + '</strong> — ' + extra.grams + food.unit;
+            html += '<span class="trainer-extra-item-macros">' + ek + ' kcal · P:' + ep + ' C:' + ec + ' G:' + ef + '</span>';
             html += '</div>';
-            html += '<button class="trainer-extra-remove" data-extra-remove="'+i+'">\u2715</button>';
+            html += '<button class="trainer-extra-remove" data-extra-remove="'+i+'">✕</button>';
             html += '</div>';
         });
         html += '</div>';
     }
     html += '</div>';
 
-    // Suplementos
-    html += '<div class="trainer-section"><h3>\ud83d\udc8a Suplementaci\u00f3n</h3><div class="trainer-supps">';
+    // Suplementos (siempre visible, fuera de tabs)
+    html += '<div class="trainer-section"><h3>\ud83d\udc8a Suplementación</h3><div class="trainer-supps">';
     supplements.forEach(function(s) {
-        html += '<div class="trainer-supp">' + s.icon + ' <strong>' + s.title + '</strong> \u2014 ' + s.desc + '</div>';
+        html += '<div class="trainer-supp">' + s.icon + ' <strong>' + s.title + '</strong> — ' + s.desc + '</div>';
     });
     html += '</div></div>';
 
     document.getElementById('trainer-content').innerHTML = html;
+    // Sync tab button active states
+    document.querySelectorAll('.trainer-tab').forEach(function(btn) {
+        btn.classList.toggle('active', btn.dataset.trainerTab === currentTrainerTab);
+    });
     renderTrainerNutrition();
     renderTrainerDietSummary();
     renderTrainerValidator();
@@ -3511,6 +3555,14 @@ function renderTrainerValidator() {
 // Trainer toggle button
 document.getElementById('trainer-toggle').addEventListener('click', function() {
     enterTrainerMode();
+});
+
+// Trainer tab switching
+document.addEventListener('click', function(e) {
+    var tabBtn = e.target.closest('.trainer-tab');
+    if (tabBtn && tabBtn.dataset.trainerTab) {
+        switchTrainerTab(tabBtn.dataset.trainerTab);
+    }
 });
 
 // Trainer selection — prevent scroll-triggered selections on mobile
