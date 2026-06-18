@@ -1,6 +1,53 @@
 // ============================================================
 // DIET DATA - Base amounts for 2500 kcal
 // ============================================================
+
+// App modal helpers (replace browser alert/confirm)
+function showAppAlert(message, callback) {
+    var overlay = document.getElementById('app-modal-overlay');
+    var body = document.getElementById('app-modal-body');
+    var actions = document.getElementById('app-modal-actions');
+    body.innerHTML = message;
+    actions.innerHTML = '<button class="app-modal-btn app-modal-btn-primary" id="app-modal-ok">Entendido</button>';
+    overlay.style.display = '';
+    document.getElementById('app-modal-ok').addEventListener('click', function() {
+        overlay.style.display = 'none';
+        if (callback) callback();
+    });
+    overlay.addEventListener('click', function handler(e) {
+        if (e.target === overlay) {
+            overlay.style.display = 'none';
+            overlay.removeEventListener('click', handler);
+        }
+    });
+}
+
+function showAppConfirm(message, onConfirm, onCancel) {
+    var overlay = document.getElementById('app-modal-overlay');
+    var body = document.getElementById('app-modal-body');
+    var actions = document.getElementById('app-modal-actions');
+    body.innerHTML = message;
+    actions.innerHTML =
+        '<button class="app-modal-btn app-modal-btn-secondary" id="app-modal-cancel">Cancelar</button>' +
+        '<button class="app-modal-btn app-modal-btn-primary" id="app-modal-confirm">Continuar</button>';
+    overlay.style.display = '';
+    document.getElementById('app-modal-confirm').addEventListener('click', function() {
+        overlay.style.display = 'none';
+        if (onConfirm) onConfirm();
+    });
+    document.getElementById('app-modal-cancel').addEventListener('click', function() {
+        overlay.style.display = 'none';
+        if (onCancel) onCancel();
+    });
+    overlay.addEventListener('click', function handler(e) {
+        if (e.target === overlay) {
+            overlay.style.display = 'none';
+            overlay.removeEventListener('click', handler);
+            if (onCancel) onCancel();
+        }
+    });
+}
+
 var BASE_KCAL = 2500;
 
 var breakfastOptions = [
@@ -954,21 +1001,21 @@ document.getElementById('calc-steps').addEventListener('input', function() {
 document.getElementById('next-1').addEventListener('click', function() {
     var age = parseInt(document.getElementById('calc-age').value);
     if (age && age < 18) {
-        alert('Este plan está diseñado para adultos (18+). Si eres menor de 18, tu cuerpo aún está en desarrollo y tus necesidades nutricionales son diferentes. Consulta con un médico o nutricionista antes de seguir cualquier dieta.');
+        showAppAlert('Este plan está diseñado para adultos (18+). Si eres menor de 18, tu cuerpo aún está en desarrollo y tus necesidades nutricionales son diferentes. Consulta con un médico o nutricionista antes de seguir cualquier dieta.');
         return;
     }
     if (age && age > 99) {
-        alert('¡' + age + ' años! Eres un ejemplo de vida. Sinceramente, no necesitas ninguna app — lo que has hecho hasta ahora te ha funcionado de maravilla. Sigue disfrutando y haciéndole caso a tu médico. ¡Larga vida! 🎉');
+        showAppAlert('¡' + age + ' años! Eres un ejemplo de vida. Sinceramente, no necesitas ninguna app — lo que has hecho hasta ahora te ha funcionado de maravilla. Sigue disfrutando y haciéndole caso a tu médico. ¡Larga vida! 🎉');
         return;
     }
-    if (!validateStep1()) { alert('Rellena todos los campos: edad, altura y peso.'); return; }
+    if (!validateStep1()) { showAppAlert('Rellena todos los campos: edad, altura y peso.'); return; }
     userName = (document.getElementById('calc-name').value || '').trim();
     showStep(2);
 });
 
 document.getElementById('back-2').addEventListener('click', function() { showStep(1); });
 document.getElementById('next-2').addEventListener('click', function() {
-    if (!validateStep2()) { alert('Selecciona tu nivel de actividad diaria.'); return; }
+    if (!validateStep2()) { showAppAlert('Selecciona tu nivel de actividad diaria.'); return; }
     showGoalRecommendation();
     showStep(3);
 });
@@ -1038,6 +1085,19 @@ function getGoalMismatchWarning(recommended, chosen) {
     return msg;
 }
 
+function proceedToStep4() {
+    var result = calculateTDEE();
+    if (!result) { showAppAlert('Error calculando TDEE.'); return false; }
+    var btn = document.getElementById('next-3');
+    delete btn.dataset.confirmed;
+    userTdee = result.tdee;
+    recommendedKcal = getRecommendedKcal(result.tdee, userGoal);
+
+    document.getElementById('ob-tdee').textContent = result.tdee;
+    document.getElementById('ob-recommended').textContent = recommendedKcal;
+    return true;
+}
+
 document.getElementById('next-3').addEventListener('click', function() {
     if (!userGoal) return;
 
@@ -1046,23 +1106,19 @@ document.getElementById('next-3').addEventListener('click', function() {
     if (recommended && userGoal !== recommended && !this.dataset.confirmed) {
         var warnings = getGoalMismatchWarning(recommended, userGoal);
         if (warnings) {
-            var proceed = confirm(warnings);
-            if (!proceed) return;
-            this.dataset.confirmed = 'true';
+            var self = this;
+            showAppConfirm(warnings, function() {
+                self.dataset.confirmed = 'true';
+                self.click();
+            });
+            return;
         }
     }
-    delete this.dataset.confirmed;
 
-    var result = calculateTDEE();
-    if (!result) { alert('Error calculando TDEE.'); return; }
-    userTdee = result.tdee;
-    recommendedKcal = getRecommendedKcal(result.tdee, userGoal);
+    if (!proceedToStep4()) return;
 
-    document.getElementById('ob-tdee').textContent = result.tdee;
-    document.getElementById('ob-recommended').textContent = recommendedKcal;
-
-    var deficitAbs = result.tdee - recommendedKcal;
-    var surplusAbs = recommendedKcal - result.tdee;
+    var deficitAbs = userTdee - recommendedKcal;
+    var surplusAbs = recommendedKcal - userTdee;
 
     if (userGoal === 'cut') {
         document.getElementById('ob-goal-label').textContent = '🔥 Recomendado';
