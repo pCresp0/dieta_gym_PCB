@@ -1437,6 +1437,7 @@ document.getElementById('start-plan').addEventListener('click', function() {
     renderAll();
     activateTab(getDefaultTab());
     populateDisclaimer();
+    populateBodyTimeline();
     saveAllState();
 
     // Show welcome modal on first visit
@@ -1649,6 +1650,99 @@ function randomDiet() {
         localStorage.setItem('howItWorksCollapsed', section.classList.contains('collapsed') ? '1' : '0');
     });
 })();
+
+// Body timeline - collapsible + dynamic content based on goal
+(function() {
+    var section = document.getElementById('body-timeline');
+    var toggle = document.getElementById('body-timeline-toggle');
+    var body = document.getElementById('body-timeline-body');
+    if (!section || !toggle || !body) return;
+
+    // Start collapsed
+    var stored = localStorage.getItem('bodyTimelineCollapsed');
+    if (stored !== '0') {
+        section.classList.add('collapsed');
+    }
+
+    toggle.addEventListener('click', function() {
+        section.classList.toggle('collapsed');
+        localStorage.setItem('bodyTimelineCollapsed', section.classList.contains('collapsed') ? '1' : '0');
+    });
+})();
+
+function populateBodyTimeline() {
+    var body = document.getElementById('body-timeline-body');
+    if (!body) return;
+
+    var goal = userGoal || 'cut';
+    var deficit = goal === 'cut' ? Math.round(userTdee * 0.175) : 0;
+    var weeklyLoss = goal === 'cut' ? Math.round(deficit * 7 / 7700 * 10) / 10 : 0;
+
+    var timelines = {
+        cut: [
+            { period: 'Días 1-3', icon: '🔄', title: 'Adaptación inicial',
+              text: 'Tu cuerpo empieza a agotar el glucógeno muscular almacenado. Puedes notar <strong>más hambre de lo normal</strong>, algo de fatiga y leves dolores de cabeza. Es completamente normal — tu cuerpo está cambiando de combustible. Bebe mucha agua.' },
+            { period: 'Días 4-7', icon: '💧', title: 'Bajada rápida de peso (agua)',
+              text: 'Puedes perder <strong>1-2 kg en la primera semana</strong>, pero la mayor parte es agua y glucógeno, no grasa. Por cada gramo de glucógeno se retienen ~3g de agua. No te emociones demasiado ni te desanimes si luego "sube" algo.' },
+            { period: 'Semanas 2-3', icon: '⚡', title: 'El cuerpo se adapta',
+              text: 'El hambre se estabiliza, la energía vuelve a niveles normales. Empiezas a perder <strong>grasa real</strong>: unas <strong>' + weeklyLoss + ' kg/semana</strong> con tu déficit actual (~' + deficit + ' kcal/día). La ropa empieza a quedar más holgada antes de que la báscula lo refleje.' },
+            { period: 'Semanas 4-6', icon: '🔥', title: 'Resultados visibles',
+              text: 'Los cambios se notan en el espejo y en cómo te queda la ropa. El metabolismo se ajusta ligeramente (adaptación metabólica), así que el progreso puede ralentizarse un poco. Es un buen momento para medir con cinta métrica además de la báscula.' },
+            { period: 'Semanas 7-12', icon: '💪', title: 'Consolidación',
+              text: 'Si entrenas fuerza con alta proteína, mantienes la masa muscular mientras pierdes grasa. Los <strong>estancamientos de 1-2 semanas son normales</strong> — el cuerpo retiene agua temporalmente. No reduzcas calorías, confía en el proceso.' },
+            { period: '⚠️ Importante', icon: '📊', title: 'La báscula miente',
+              text: 'El peso fluctúa <strong>±1 kg al día</strong> por agua, sal, fibra e intestino. Pésate siempre en las mismas condiciones (mañana, en ayunas) y haz <strong>media semanal</strong>, no te fijes en un solo día.' }
+        ],
+        recomp: [
+            { period: 'Semanas 1-2', icon: '🔄', title: 'Adaptación sin grandes cambios',
+              text: 'El peso en la báscula puede <strong>no moverse casi nada</strong> — y eso es bueno. Estás perdiendo grasa y ganando músculo simultáneamente. Puedes notar ligera fatiga mientras el cuerpo se adapta a la nueva nutrición.' },
+            { period: 'Semanas 3-6', icon: '💪', title: 'Cambios en composición corporal',
+              text: 'La báscula puede no cambiar mucho, pero tu <strong>cuerpo sí</strong>: más definición, ropa que queda diferente, más fuerza en los entrenamientos. Mide con fotos y cinta métrica, no solo con la báscula.' },
+            { period: 'Semanas 7-12', icon: '🎯', title: 'Resultados evidentes',
+              text: 'Si mantienes la adherencia, verás <strong>menos grasa y más músculo</strong> con un peso similar al inicial. Es el proceso más lento pero más sostenible a largo plazo — sin fases extremas de bulk o cut.' },
+            { period: '⚠️ Importante', icon: '⏳', title: 'Paciencia ante todo',
+              text: 'La recomposición es <strong>más lenta</strong> que un cut o bulk, pero más saludable. Confía en el espejo y en tus marcas del gym, no en la báscula. Resultados reales a partir de las 8 semanas.' }
+        ],
+        bulk: [
+            { period: 'Semanas 1-2', icon: '🔋', title: 'Más energía y rendimiento',
+              text: 'Notarás <strong>más energía</strong> y mejor rendimiento en el gym casi inmediatamente. El superávit calórico rellena el glucógeno muscular — te sentirás más "lleno" y fuerte.' },
+            { period: 'Semanas 2-4', icon: '💧', title: 'Subida rápida inicial',
+              text: 'Puedes subir <strong>1-2 kg las primeras semanas</strong>, pero gran parte es agua, glucógeno y contenido intestinal — no grasa. Es normal y esperado.' },
+            { period: 'Semanas 4-8', icon: '💪', title: 'Ganancia muscular real',
+              text: 'Con entrenamiento de fuerza progresivo, ganarás <strong>~0.25-0.5 kg de músculo al mes</strong> (hombres) o ~0.12-0.25 kg (mujeres). El resto de la subida de peso es grasa necesaria para el proceso.' },
+            { period: 'Semanas 8-16', icon: '📈', title: 'Progresión sostenida',
+              text: 'Los progresos en fuerza y volumen se hacen evidentes. Si la grasa sube demasiado rápido, el superávit puede ser excesivo. Un <strong>aumento de 0.5-1% del peso corporal al mes</strong> es un buen ritmo.' },
+            { period: '⚠️ Importante', icon: '🍽️', title: 'Más no es mejor',
+              text: 'Comer mucho más de lo necesario <strong>no acelera la ganancia muscular</strong>, solo acumula más grasa. El superávit moderado (~15%) es lo óptimo.' }
+        ],
+        maintain: [
+            { period: 'Semanas 1-2', icon: '⚖️', title: 'Estabilización',
+              text: 'Comer limpio al mantenimiento puede hacer que <strong>pierdas algo de peso inicial</strong> si antes comías ultraprocesados — menos sal = menos retención de agua.' },
+            { period: 'Semanas 3-6', icon: '🔋', title: 'Más energía y mejor digestión',
+              text: 'Al comer alimentos de calidad notarás <strong>mejor digestión, más energía estable</strong> y menos bajones a lo largo del día. El azúcar en sangre se mantiene más estable sin picos.' },
+            { period: 'Semanas 7-12', icon: '💪', title: 'Mejora de composición',
+              text: 'Aunque mantengas el peso, si entrenas fuerza puedes <strong>recomponer ligeramente</strong> tu cuerpo — un poco más de músculo y un poco menos de grasa a largo plazo.' },
+            { period: '⚠️ Importante', icon: '📊', title: 'Fluctuaciones normales',
+              text: 'El peso puede <strong>variar ±1-1.5 kg</strong> de un día a otro. Si tu media semanal se mantiene estable, estás en el camino correcto.' }
+        ]
+    };
+
+    var timeline = timelines[goal] || timelines.cut;
+    var goalName = goalLabels[goal] || 'tu plan';
+
+    var html = '<h4 style="margin:0 0 12px;color:var(--text-primary);">🗓️ Línea temporal — ' + goalName + '</h4>';
+    html += '<div class="body-timeline-list">';
+    timeline.forEach(function(item) {
+        html += '<div class="bt-item">' +
+            '<div class="bt-period">' + item.icon + ' <strong>' + item.period + '</strong></div>' +
+            '<div class="bt-title">' + item.title + '</div>' +
+            '<div class="bt-text">' + item.text + '</div>' +
+            '</div>';
+    });
+    html += '</div>';
+
+    body.innerHTML = html;
+}
 
 // Info tooltip on mobile (long press OR info button tap to show, tap elsewhere to hide)
 (function() {
@@ -2445,6 +2539,7 @@ function init() {
         renderAll();
         activateTab(getDefaultTab());
         populateDisclaimer();
+        populateBodyTimeline();
         window.scrollTo(0, 0);
     } else {
         document.getElementById('onboarding').style.display = '';

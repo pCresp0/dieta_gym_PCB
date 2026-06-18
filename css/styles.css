@@ -598,6 +598,38 @@ body {
     font-weight: 600;
 }
 
+/* Body timeline */
+.body-timeline-list {
+    display: grid;
+    gap: 12px;
+}
+
+.bt-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+}
+
+.bt-period {
+    font-size: 0.75rem;
+    color: var(--accent);
+    margin-bottom: 4px;
+}
+
+.bt-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.bt-text {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    line-height: 1.55;
+}
+
 /* ========== INFO BANNER ========== */
 .info-banner {
     margin-bottom: 16px;
