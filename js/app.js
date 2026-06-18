@@ -70,7 +70,7 @@ var breakfastOptions = [
     { id:'bocadillo', name:'Bocadillo de pollo/pavo y queso/guacamole', macros:[520,38,55,16],
       items:[{text:'Pan integral trigo/espelta/centeno',amount:120,unit:'g'},{text:'Pollo / Pavo',amount:100,unit:'g'},{text:'Queso',amount:60,unit:'g',extra:'ó {80}g guacamole',extraBase:80}]},
     { id:'batido-proteinas', name:'Batido de avena y proteínas', macros:[540,37,50,21],
-      items:[{text:'Corn flakes / copos de avena / cereales sin azúcar',amount:45,unit:'g'},{text:'Leche semidesnatada (un vaso)',amount:200,unit:'ml'},{text:'Whey protein',amount:35,unit:'g'},{text:'Aceite de oliva (sustituto frutos secos)',amount:15,unit:'ml',spoonHint:true}]}
+      items:[{text:'Corn flakes / copos de avena / cereales sin azúcar',amount:45,unit:'g'},{text:'Leche semidesnatada',amount:200,unit:'ml',glassHint:true},{text:'Whey protein',amount:35,unit:'g'},{text:'Aceite de oliva',amount:15,unit:'ml',spoonHint:true}]}
 ];
 
 var lunchCarbs = [
@@ -349,6 +349,16 @@ function oilSpoonHint(ml) {
     return '(~' + Math.round(ml / 15) + ' cucharadas soperas)';
 }
 
+// Glass equivalence for milk (ml) — 1 vaso ≈ 200-250ml
+function milkGlassHint(ml) {
+    if (ml <= 125) return '(~½ vaso)';
+    if (ml <= 200) return '(~1 vaso)';
+    if (ml <= 300) return '(~1 vaso y medio)';
+    if (ml <= 400) return '(~2 vasos)';
+    if (ml <= 500) return '(~2 vasos y medio)';
+    return '(~' + Math.round(ml / 200) + ' vasos)';
+}
+
 // ============================================================
 // BMR / TDEE
 // ============================================================
@@ -482,6 +492,7 @@ function renderBreakfast() {
             if (it.amount !== null) { c += ': <span class="amount">' + scaledAmt + it.unit + '</span>'; }
             if (it.extra) { c += ' <span style="color:#999">' + it.extra.replace(/\{(\d+)\}/, scaleAmount(it.extraBase,ratio)) + '</span>'; }
             if (it.spoonHint) { c += ' <span style="color:#999">' + oilSpoonHint(scaledAmt) + '</span>'; }
+            if (it.glassHint) { c += ' <span style="color:#999">' + milkGlassHint(scaledAmt) + '</span>'; }
             return '<li' + cls + '>' + c + '</li>';
         }).join('');
         return '<div class="breakfast-card' + (sel?' selected':'') + '" data-index="'+idx+'"><div class="breakfast-card-title">'+opt.name+'</div><ul class="breakfast-card-items">'+items+'</ul></div>';
@@ -2002,6 +2013,7 @@ function buildWeeklyExportCanvas(plan) {
                 line += ' ' + extraText;
             }
             if (item.spoonHint) { line += ' ' + oilSpoonHint(scaled); }
+            if (item.glassHint) { line += ' ' + milkGlassHint(scaled); }
             ctx.fillStyle = textLight;
             ctx.font = '15px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
             ctx.fillText(line, pad + 24, mealY);
@@ -2488,6 +2500,10 @@ function buildMealSummaryHTML(selObj, ratio, isTrainer) {
             if (item.spoonHint) {
                 var hintAmt = isTrainer ? item.amount : scaleAmount(item.amount, carbR);
                 line += ' <span class="summary-extra">' + oilSpoonHint(hintAmt) + '</span>';
+            }
+            if (item.glassHint) {
+                var glassAmt = isTrainer ? item.amount : scaleAmount(item.amount, carbR);
+                line += ' <span class="summary-extra">' + milkGlassHint(glassAmt) + '</span>';
             }
             return line;
         });
@@ -3097,6 +3113,7 @@ function buildWhatsAppText() {
                 line += ' ' + extraText;
             }
             if (item.spoonHint) { line += ' ' + oilSpoonHint(scaled); }
+            if (item.glassHint) { line += ' ' + milkGlassHint(scaled); }
             return line;
         });
         var bkKcal = Math.round(opt.macros[0] * carbR);
@@ -3403,6 +3420,10 @@ function buildExportCanvas() {
             if (it.spoonHint) {
                 var spAmt = it.amount !== null ? scaleAmount(it.amount, carbRatio) : 0;
                 name += '  ' + oilSpoonHint(spAmt);
+            }
+            if (it.glassHint) {
+                var glAmt = it.amount !== null ? scaleAmount(it.amount, carbRatio) : 0;
+                name += '  ' + milkGlassHint(glAmt);
             }
             return { name: name, amount: amt };
         });
