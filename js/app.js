@@ -3475,81 +3475,89 @@ function generateMacroSuggestions(macro) {
     var macroLabel = macro === 'protein' ? 'proteína' : (macro === 'carbs' ? 'carbohidratos' : 'grasas');
     var suggestions = [];
 
-    // Calculate current macro from each slot
-    function slotMacro(data, idx) {
-        if (idx === null) return 0;
-        return data[idx].n[mi] * data[idx].base / 100;
+    // Get names of currently selected foods to avoid duplicates (variety)
+    var usedNames = [];
+    if (trainerSelections.lunchCarb !== null) usedNames.push(lunchCarbs[trainerSelections.lunchCarb].name.toLowerCase());
+    if (trainerSelections.lunchProtein !== null) usedNames.push(lunchProteins[trainerSelections.lunchProtein].name.toLowerCase());
+    if (trainerSelections.dinnerCarb !== null) usedNames.push(dinnerCarbs[trainerSelections.dinnerCarb].name.toLowerCase());
+    if (trainerSelections.dinnerProtein !== null) usedNames.push(dinnerProteins[trainerSelections.dinnerProtein].name.toLowerCase());
+
+    // Helper: calculate kcal and all macros for a food item (per its base grams)
+    function itemKcal(item) { return item.n[0] * item.base / 100; }
+    function itemMacro(item, idx) { return item.n[idx] * item.base / 100; }
+
+    // Helper: check if a food name is already used in another meal slot
+    function isDuplicate(name, currentMeal) {
+        var lower = name.toLowerCase();
+        // Check if this food name matches any other slot (not the current one being swapped)
+        if (currentMeal === 'lunch') {
+            if (trainerSelections.dinnerCarb !== null && dinnerCarbs[trainerSelections.dinnerCarb].name.toLowerCase() === lower) return true;
+            if (trainerSelections.dinnerProtein !== null && dinnerProteins[trainerSelections.dinnerProtein].name.toLowerCase() === lower) return true;
+        }
+        if (currentMeal === 'dinner') {
+            if (trainerSelections.lunchCarb !== null && lunchCarbs[trainerSelections.lunchCarb].name.toLowerCase() === lower) return true;
+            if (trainerSelections.lunchProtein !== null && lunchProteins[trainerSelections.lunchProtein].name.toLowerCase() === lower) return true;
+        }
+        return false;
     }
 
-    // 1. Suggest swaps in lunch carbs
-    if (trainerSelections.lunchCarb !== null) {
-        var currentItem = lunchCarbs[trainerSelections.lunchCarb];
-        var currentMacro = currentItem.n[mi] * currentItem.base / 100;
-        lunchCarbs.forEach(function(alt, idx) {
-            if (idx === trainerSelections.lunchCarb) return;
-            var altMacro = alt.n[mi] * alt.base / 100;
-            var diff = altMacro - currentMacro;
-            if (diff > 1) {
-                suggestions.push({ type: 'swap', meal: 'Comida', slot: 'hidrato', from: currentItem.name, to: alt.name, diff: Math.round(diff) });
+    // Evaluate swaps for a given slot
+    function evalSwaps(data, currentIdx, meal, slotName, mealKey) {
+        if (currentIdx === null) return;
+        var currentItem = data[currentIdx];
+        var curKcal = itemKcal(currentItem);
+        var curMacro = itemMacro(currentItem, mi);
+        data.forEach(function(alt, idx) {
+            if (idx === currentIdx) return;
+            // Skip if this would duplicate food already in another meal
+            if (isDuplicate(alt.name, mealKey)) return;
+            var altKcal = itemKcal(alt);
+            var altMacro = itemMacro(alt, mi);
+            var macroDiff = altMacro - curMacro;
+            var kcalDiff = altKcal - curKcal;
+            if (macroDiff > 1) {
+                suggestions.push({
+                    type: 'swap', meal: meal, slot: slotName,
+                    from: currentItem.name, to: alt.name,
+                    diff: Math.round(macroDiff),
+                    kcalDiff: Math.round(kcalDiff)
+                });
             }
         });
     }
 
-    // 2. Suggest swaps in lunch proteins
-    if (trainerSelections.lunchProtein !== null) {
-        var currentItem = lunchProteins[trainerSelections.lunchProtein];
-        var currentMacro = currentItem.n[mi] * currentItem.base / 100;
-        lunchProteins.forEach(function(alt, idx) {
-            if (idx === trainerSelections.lunchProtein) return;
-            var altMacro = alt.n[mi] * alt.base / 100;
-            var diff = altMacro - currentMacro;
-            if (diff > 1) {
-                suggestions.push({ type: 'swap', meal: 'Comida', slot: 'proteína', from: currentItem.name, to: alt.name, diff: Math.round(diff) });
-            }
-        });
-    }
-
-    // 3. Suggest swaps in dinner carbs
-    if (trainerSelections.dinnerCarb !== null) {
-        var currentItem = dinnerCarbs[trainerSelections.dinnerCarb];
-        var currentMacro = currentItem.n[mi] * currentItem.base / 100;
-        dinnerCarbs.forEach(function(alt, idx) {
-            if (idx === trainerSelections.dinnerCarb) return;
-            var altMacro = alt.n[mi] * alt.base / 100;
-            var diff = altMacro - currentMacro;
-            if (diff > 1) {
-                suggestions.push({ type: 'swap', meal: 'Cena', slot: 'hidrato', from: currentItem.name, to: alt.name, diff: Math.round(diff) });
-            }
-        });
-    }
-
-    // 4. Suggest swaps in dinner proteins
-    if (trainerSelections.dinnerProtein !== null) {
-        var currentItem = dinnerProteins[trainerSelections.dinnerProtein];
-        var currentMacro = currentItem.n[mi] * currentItem.base / 100;
-        dinnerProteins.forEach(function(alt, idx) {
-            if (idx === trainerSelections.dinnerProtein) return;
-            var altMacro = alt.n[mi] * alt.base / 100;
-            var diff = altMacro - currentMacro;
-            if (diff > 1) {
-                suggestions.push({ type: 'swap', meal: 'Cena', slot: 'proteína', from: currentItem.name, to: alt.name, diff: Math.round(diff) });
-            }
-        });
-    }
-
-    // 5. Suggest swaps in breakfast
+    // Evaluate breakfast swaps
     if (trainerSelections.breakfast !== null) {
-        var currentItem = breakfastOptions[trainerSelections.breakfast];
-        var currentMacro = currentItem.macros[mi];
+        var currentBrk = breakfastOptions[trainerSelections.breakfast];
+        var curKcal = currentBrk.macros[0];
+        var curMacro = currentBrk.macros[mi];
         breakfastOptions.forEach(function(alt, idx) {
             if (idx === trainerSelections.breakfast) return;
-            var altMacro = alt.macros[mi];
-            var diff = altMacro - currentMacro;
-            if (diff > 1) {
-                suggestions.push({ type: 'swap', meal: 'Desayuno', slot: '', from: currentItem.name, to: alt.name, diff: Math.round(diff) });
+            var macroDiff = alt.macros[mi] - curMacro;
+            var kcalDiff = alt.macros[0] - curKcal;
+            if (macroDiff > 1) {
+                suggestions.push({
+                    type: 'swap', meal: 'Desayuno', slot: '',
+                    from: currentBrk.name, to: alt.name,
+                    diff: Math.round(macroDiff),
+                    kcalDiff: Math.round(kcalDiff)
+                });
             }
         });
     }
+
+    evalSwaps(lunchCarbs, trainerSelections.lunchCarb, 'Comida', 'hidrato', 'lunch');
+    evalSwaps(lunchProteins, trainerSelections.lunchProtein, 'Comida', 'proteína', 'lunch');
+    evalSwaps(dinnerCarbs, trainerSelections.dinnerCarb, 'Cena', 'hidrato', 'dinner');
+    evalSwaps(dinnerProteins, trainerSelections.dinnerProtein, 'Cena', 'proteína', 'dinner');
+
+    // Score and sort swaps: prefer high macro gain with low kcal change
+    suggestions.forEach(function(s) {
+        // Score = macro gain - penalty for kcal change (penalize more if kcal increases a lot)
+        var kcalPenalty = Math.abs(s.kcalDiff) / 20; // every 20 kcal deviation = 1 point penalty
+        s.score = s.diff - kcalPenalty;
+    });
+    suggestions.sort(function(a, b) { return b.score - a.score; });
 
     // 6. Suggest adding extra food to fill the gap
     var targetMacros = calculateTrainerMacros();
@@ -3560,29 +3568,26 @@ function generateMacroSuggestions(macro) {
     var currentG = macro === 'protein' ? targetMacros.protein : (macro === 'carbs' ? targetMacros.carbs : targetMacros.fat);
     var deficit = targetG - currentG;
 
+    var addSuggestions = [];
     if (deficit > 0) {
-        // Find foods rich in this macro
-        var addOptions = [];
         trainerFoodCatalog.forEach(function(food) {
             var macroPerG = food.n[mi];
-            if (macroPerG > 5) { // at least 5g per 100g
+            if (macroPerG > 5) {
                 var gramsNeeded = Math.round(deficit / macroPerG * 100);
+                var extraKcal = Math.round(food.n[0] * gramsNeeded / 100);
                 if (gramsNeeded > 0 && gramsNeeded <= 500) {
-                    addOptions.push({ name: food.name, grams: gramsNeeded, macroGain: deficit });
+                    addSuggestions.push({ type: 'add', food: food.name, grams: gramsNeeded, diff: Math.round(deficit), kcalAdd: extraKcal });
                 }
             }
         });
-        // Sort by least grams needed
-        addOptions.sort(function(a, b) { return a.grams - b.grams; });
-        addOptions.slice(0, 3).forEach(function(opt) {
-            suggestions.push({ type: 'add', food: opt.name, grams: opt.grams, diff: Math.round(opt.macroGain) });
-        });
+        addSuggestions.sort(function(a, b) { return a.kcalAdd - b.kcalAdd; });
     }
 
-    // Sort swaps by biggest improvement
-    suggestions.sort(function(a, b) { return b.diff - a.diff; });
+    // Combine: top 6 swaps + top 3 adds
+    var finalSwaps = suggestions.slice(0, 6);
+    var finalAdds = addSuggestions.slice(0, 3);
 
-    return { macro: macroLabel, deficit: Math.round(deficit), suggestions: suggestions.slice(0, 8) };
+    return { macro: macroLabel, deficit: Math.round(deficit), swaps: finalSwaps, adds: finalAdds };
 }
 
 function showMacroFixTooltip(macro) {
@@ -3590,27 +3595,27 @@ function showMacroFixTooltip(macro) {
     var title = '\ud83d\udca1 C\u00f3mo conseguir ' + data.deficit + 'g m\u00e1s de ' + data.macro;
     var html = '';
 
-    if (data.suggestions.length === 0) {
-        html = '<p>No hay sugerencias disponibles con la selección actual.</p>';
+    if (data.swaps.length === 0 && data.adds.length === 0) {
+        html = '<p>No hay sugerencias disponibles con la selecci\u00f3n actual.</p>';
     } else {
-        var swaps = data.suggestions.filter(function(s) { return s.type === 'swap'; });
-        var adds = data.suggestions.filter(function(s) { return s.type === 'add'; });
-
-        if (swaps.length > 0) {
+        if (data.swaps.length > 0) {
             html += '<h4 style="margin-top:0">\ud83d\udd04 Cambios posibles</h4><div class="macro-fix-list">';
-            swaps.forEach(function(s) {
+            data.swaps.forEach(function(s) {
+                var kcalLabel = s.kcalDiff === 0 ? '<span class="macro-fix-kcal neutral">=kcal</span>' :
+                    (Math.abs(s.kcalDiff) <= 30 ? '<span class="macro-fix-kcal neutral">' + (s.kcalDiff > 0 ? '+' : '') + s.kcalDiff + ' kcal</span>' :
+                    '<span class="macro-fix-kcal ' + (s.kcalDiff > 0 ? 'high' : 'low') + '">' + (s.kcalDiff > 0 ? '+' : '') + s.kcalDiff + ' kcal</span>');
                 html += '<div class="macro-fix-item"><span class="macro-fix-meal">' + s.meal + (s.slot ? ' (' + s.slot + ')' : '') + '</span>' +
                     '<span class="macro-fix-swap">' + s.from + ' \u2192 <strong>' + s.to + '</strong></span>' +
-                    '<span class="macro-fix-diff">+' + s.diff + 'g</span></div>';
+                    '<span class="macro-fix-stats"><span class="macro-fix-diff">+' + s.diff + 'g</span>' + kcalLabel + '</span></div>';
             });
             html += '</div>';
         }
 
-        if (adds.length > 0) {
+        if (data.adds.length > 0) {
             html += '<h4>\u2795 A\u00f1adir alimento extra</h4><div class="macro-fix-list">';
-            adds.forEach(function(s) {
+            data.adds.forEach(function(s) {
                 html += '<div class="macro-fix-item"><span class="macro-fix-add">A\u00f1adir <strong>' + s.grams + 'g ' + s.food + '</strong></span>' +
-                    '<span class="macro-fix-diff">+' + s.diff + 'g</span></div>';
+                    '<span class="macro-fix-stats"><span class="macro-fix-diff">+' + s.diff + 'g</span><span class="macro-fix-kcal">' + (s.kcalAdd > 0 ? '+' : '') + s.kcalAdd + ' kcal</span></span></div>';
             });
             html += '</div>';
         }

@@ -4700,6 +4700,34 @@ body {
     white-space: nowrap;
 }
 
+.macro-fix-stats {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+}
+
+.macro-fix-kcal {
+    font-size: 0.7rem;
+    font-weight: 500;
+    white-space: nowrap;
+    padding: 1px 5px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.06);
+}
+
+.macro-fix-kcal.neutral {
+    color: #7f8c8d;
+}
+
+.macro-fix-kcal.high {
+    color: #e74c3c;
+}
+
+.macro-fix-kcal.low {
+    color: #2ecc71;
+}
+
 /* ========== RESPONSIVE ONBOARDING ========== */
 @media (max-width: 640px) {
     /* Prevent iOS zoom on input focus */
