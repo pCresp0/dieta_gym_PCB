@@ -2737,6 +2737,42 @@ body {
     margin-bottom: 0;
 }
 
+/* Tooltip TDEE breakdown */
+.tooltip-breakdown {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    margin: 10px 0;
+    display: grid;
+    gap: 6px;
+}
+
+.tooltip-bk-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    padding: 3px 0;
+}
+
+.tooltip-bk-row strong {
+    color: var(--text-primary);
+}
+
+.tooltip-bk-row.tooltip-bk-total {
+    border-top: 1px solid var(--border);
+    padding-top: 8px;
+    margin-top: 2px;
+    color: var(--accent);
+    font-weight: 600;
+}
+
+.tooltip-bk-row.tooltip-bk-total strong {
+    color: var(--accent);
+}
+
 /* App Modal (replaces browser alerts) */
 .app-modal-overlay {
     position: fixed;

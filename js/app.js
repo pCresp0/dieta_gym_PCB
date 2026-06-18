@@ -583,6 +583,7 @@ function renderInfoBanner() {
         '<div class="info-banner-card">' +
             '<div class="info-banner-metrics">' +
                 '<div class="info-metric">' +
+                    '<button class="info-metric-why" id="info-tdee-detail-btn" title="¿Qué es el TDEE y cómo se ha calculado?">ℹ️</button>' +
                     '<span class="info-metric-label">Lo que quemas</span>' +
                     '<span class="info-metric-value">' + userTdee + '</span>' +
                     '<span class="info-metric-sub">kcal/día (TDEE)</span>' +
@@ -591,29 +592,40 @@ function renderInfoBanner() {
                     (diff <= 0 ? '📉' : '📈') +
                 '</div>' +
                 '<div class="info-metric info-metric-highlight">' +
-                    '<span class="info-metric-label">Lo que deberías comer</span>' +
                     '<button class="info-metric-why" id="info-why-kcal-btn" title="¿Por qué estas kcal?">?</button>' +
+                    '<span class="info-metric-label">Lo que deberías comer</span>' +
                     '<span class="info-metric-value">' + recommendedKcal + '</span>' +
                     '<span class="info-metric-sub">kcal/día recomendadas</span>' +
                 '</div>' +
             '</div>' +
             diffLabel +
             '<p class="info-banner-explain">' + goalDescs[userGoal] + '</p>' +
-            '<button class="info-whatis-btn" id="info-whatis-btn">¿Qué es el TDEE?</button>' +
         '</div>';
 
-    // TDEE explainer
-    document.getElementById('info-whatis-btn').addEventListener('click', function(e) {
+    // TDEE detail explainer with breakdown
+    document.getElementById('info-tdee-detail-btn').addEventListener('click', function(e) {
         e.stopPropagation();
-        document.getElementById('tooltip-title').textContent = '¿Qué es el TDEE?';
-        document.getElementById('tooltip-body').innerHTML =
-            '<p>El <strong>TDEE</strong> (Total Daily Energy Expenditure) es el total de calorías que tu cuerpo gasta al día. Se calcula así:</p>' +
-            '<ul class="tooltip-list">' +
-            '<li><strong>TMB (Metabolismo Basal):</strong> Lo que quemas en reposo absoluto solo por estar vivo (respirar, bombear sangre, etc.).</li>' +
-            '<li><strong>× Factor de actividad:</strong> Se multiplica por tu nivel de movimiento diario (trabajo, paseos, recados…) sin contar el entreno.</li>' +
-            '<li><strong>+ Calorías de entreno:</strong> Lo que quemas en tus sesiones de ejercicio.</li>' +
-            '</ul>' +
-            '<p style="margin-top:10px;opacity:0.8">Si comes <strong>por debajo</strong> de tu TDEE → pierdes peso (déficit).<br>Si comes <strong>por encima</strong> → ganas peso (superávit).<br>Si comes <strong>igual</strong> → mantienes peso.</p>';
+        var result = calculateTDEE();
+        var breakdownHTML = '<p>El <strong>TDEE</strong> (Total Daily Energy Expenditure) es el total de calorías que tu cuerpo gasta al día. Se calcula sumando varios componentes:</p>';
+        if (result) {
+            var trainExtra = result.tdee - result.neat - result.stepsKcal;
+            breakdownHTML += '<div class="tooltip-breakdown">';
+            breakdownHTML += '<div class="tooltip-bk-row"><span>🔥 Metabolismo basal (BMR)</span><strong>' + result.bmr + ' kcal</strong></div>';
+            var neatExtra = result.neat - result.bmr;
+            breakdownHTML += '<div class="tooltip-bk-row"><span>🚶 Actividad diaria (NEAT)</span><strong>+' + neatExtra + ' kcal</strong></div>';
+            if (result.stepsKcal > 0) {
+                breakdownHTML += '<div class="tooltip-bk-row"><span>👟 Pasos diarios</span><strong>+' + result.stepsKcal + ' kcal</strong></div>';
+            }
+            if (trainExtra > 0) {
+                breakdownHTML += '<div class="tooltip-bk-row"><span>🏋️ Entrenamiento</span><strong>+' + Math.round(trainExtra) + ' kcal</strong></div>';
+            }
+            breakdownHTML += '<div class="tooltip-bk-row tooltip-bk-total"><span>= Tu TDEE total</span><strong>' + result.tdee + ' kcal/día</strong></div>';
+            breakdownHTML += '</div>';
+        }
+        breakdownHTML += '<p style="margin-top:10px;opacity:0.8">Si comes <strong>por debajo</strong> de tu TDEE → pierdes peso (déficit).<br>Si comes <strong>por encima</strong> → ganas peso (superávit).<br>Si comes <strong>igual</strong> → mantienes peso.</p>';
+        breakdownHTML += '<p class="tooltip-refs">Calculado con la fórmula <strong>Mifflin-St Jeor</strong>, la más precisa para población general (Frankenfield et al., 2005).</p>';
+        document.getElementById('tooltip-title').textContent = '📊 Tu TDEE — Desglose completo';
+        document.getElementById('tooltip-body').innerHTML = breakdownHTML;
         document.getElementById('tooltip-overlay').style.display = '';
     });
 
