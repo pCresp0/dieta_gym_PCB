@@ -1694,9 +1694,11 @@ function buildWeeklyExportCanvas(plan) {
     // summary card
     y += 180;
     y += 20;
-    // 7 day cards, each ~ 220px
+    // 7 day cards with dynamic height
     for (var d = 0; d < 7; d++) {
-        y += 240 + 20;
+        var bOptCalc = breakfastOptions[plan[d].selections.breakfast];
+        var dayLines = 1 + bOptCalc.items.length + 1 + 3 + 1 + 3; // breakfast header + items + lunch header + 3 lines + dinner header + 3 lines
+        y += (70 + dayLines * 28 + 20) + 16;
     }
     y += 50; // footer
 
@@ -1802,7 +1804,29 @@ function buildWeeklyExportCanvas(plan) {
         var day = plan[d];
         var sel = day.selections;
         var mac = allMacros[d];
-        var dayH = 220;
+
+        var bOpt = breakfastOptions[sel.breakfast];
+        var lc = lunchCarbs[sel.lunchCarb];
+        var lp = lunchProteins[sel.lunchProtein];
+        var dc = dinnerCarbs[sel.dinnerCarb];
+        var dp = dinnerProteins[sel.dinnerProtein];
+        var dayRatios = getScalingRatios(sel);
+        var dayCarbR = dayRatios.carb;
+        var dayProtR = dayRatios.protein;
+
+        // Calculate dynamic height for this day
+        var dayContentLines = 0;
+        dayContentLines += 1; // Desayuno header
+        dayContentLines += bOpt.items.length; // Breakfast items
+        dayContentLines += 1; // Almuerzo header
+        dayContentLines += 1; // Lunch carb
+        dayContentLines += 1; // Lunch protein
+        dayContentLines += 1; // Lunch extras
+        dayContentLines += 1; // Cena header
+        dayContentLines += 1; // Dinner carb
+        dayContentLines += 1; // Dinner protein
+        dayContentLines += 1; // Dinner extras
+        var dayH = 70 + dayContentLines * 28 + 20;
 
         fillCard(pad, curY, contentW, dayH);
 
@@ -1824,54 +1848,77 @@ function buildWeeklyExportCanvas(plan) {
         ctx.fillStyle = carbsColor; ctx.fillText('C: ' + mac.carbs + 'g', pad + 140, macY);
         ctx.fillStyle = fatColor; ctx.fillText('G: ' + mac.fat + 'g', pad + 260, macY);
 
-        // Meals
+        // Meals detail
         var mealY = curY + 80;
-        var bOpt = breakfastOptions[sel.breakfast];
-        var lc = lunchCarbs[sel.lunchCarb];
-        var lp = lunchProteins[sel.lunchProtein];
-        var dc = dinnerCarbs[sel.dinnerCarb];
-        var dp = dinnerProteins[sel.dinnerProtein];
+        var lineH = 28;
 
         // Breakfast
-        ctx.fillStyle = textMuted;
-        ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-        ctx.fillText('☀️ Desayuno', pad + 20, mealY);
-        ctx.fillStyle = textLight;
-        ctx.font = '16px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-        ctx.fillText(bOpt.name, pad + 150, mealY);
+        ctx.fillStyle = accent;
+        ctx.font = 'bold 17px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+        ctx.fillText('☀️ Desayuno — ' + bOpt.name, pad + 20, mealY);
+        mealY += lineH;
 
-        mealY += 32;
+        bOpt.items.forEach(function(item) {
+            var line = '    • ' + item.text;
+            if (item.amount !== null) {
+                var scaled = scaleAmount(item.amount, dayCarbR);
+                line += ': ' + scaled + (item.unit || 'g');
+            }
+            if (item.extra) {
+                var extraScaled = scaleAmount(item.extraBase, dayCarbR);
+                var extraText = item.extra.replace(/\{(\d+)\}/, extraScaled);
+                line += ' ' + extraText;
+            }
+            ctx.fillStyle = textLight;
+            ctx.font = '15px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+            ctx.fillText(line, pad + 24, mealY);
+            mealY += lineH;
+        });
+
         // Lunch
-        ctx.fillStyle = textMuted;
-        ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-        ctx.fillText('🍲 Almuerzo', pad + 20, mealY);
-        var dayRatios = getScalingRatios(sel);
-        var dayCarbR = dayRatios.carb;
-        var dayProtR = dayRatios.protein;
         var lcScaled = scaleAmount(lc.base, dayCarbR);
         var lpScaled = scaleAmount(lp.base, dayProtR);
-        ctx.fillStyle = textLight;
-        ctx.font = '16px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-        ctx.fillText(lc.name + ' (' + lcScaled + 'g)  +  ' + lp.name + ' (' + lpScaled + (lp.unit || 'g') + ')', pad + 150, mealY);
-
-        mealY += 32;
-        // Extras
         var vegG = scaleAmount(200, dayCarbR);
         var oilMl = scaleAmount(EXTRAS_OIL_ML, dayCarbR);
+
+        ctx.fillStyle = accent;
+        ctx.font = 'bold 17px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+        ctx.fillText('🍲 Almuerzo', pad + 20, mealY);
+        mealY += lineH;
+
+        ctx.fillStyle = textLight;
+        ctx.font = '15px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+        var lcText = '    • ' + lc.name + ': ' + lcScaled + (lc.unit || 'g');
+        if (lc.altName) lcText += '  (ó ' + lc.altName + ': ' + scaleAmount(lc.altBase, dayCarbR) + (lc.unit || 'g') + ')';
+        ctx.fillText(lcText, pad + 24, mealY);
+        mealY += lineH;
+        ctx.fillText('    • ' + lp.name + ': ' + lpScaled + (lp.unit || 'g'), pad + 24, mealY);
+        mealY += lineH;
         ctx.fillStyle = textMuted;
         ctx.font = '14px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-        ctx.fillText('+ ' + vegG + 'g verduras · ' + oilMl + 'ml aceite · 1 fruta (por comida)', pad + 150, mealY);
+        ctx.fillText('    + Verduras ~' + vegG + 'g · Aceite oliva ' + oilMl + 'ml · 1 fruta', pad + 24, mealY);
+        mealY += lineH;
 
-        mealY += 32;
         // Dinner
-        ctx.fillStyle = textMuted;
-        ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-        ctx.fillText('🌙 Cena', pad + 20, mealY);
         var dcScaled = scaleAmount(dc.base, dayCarbR);
         var dpScaled = scaleAmount(dp.base, dayProtR);
+
+        ctx.fillStyle = accent;
+        ctx.font = 'bold 17px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+        ctx.fillText('🌙 Cena', pad + 20, mealY);
+        mealY += lineH;
+
         ctx.fillStyle = textLight;
-        ctx.font = '16px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-        ctx.fillText(dc.name + ' (' + dcScaled + 'g)  +  ' + dp.name + ' (' + dpScaled + (dp.unit || 'g') + ')', pad + 150, mealY);
+        ctx.font = '15px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+        var dcText = '    • ' + dc.name + ': ' + dcScaled + (dc.unit || 'g');
+        if (dc.altName) dcText += '  (ó ' + dc.altName + ': ' + scaleAmount(dc.altBase, dayCarbR) + (dc.unit || 'g') + ')';
+        ctx.fillText(dcText, pad + 24, mealY);
+        mealY += lineH;
+        ctx.fillText('    • ' + dp.name + ': ' + dpScaled + (dp.unit || 'g'), pad + 24, mealY);
+        mealY += lineH;
+        ctx.fillStyle = textMuted;
+        ctx.font = '14px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+        ctx.fillText('    + Verduras ~' + vegG + 'g · Aceite oliva ' + oilMl + 'ml · 1 fruta', pad + 24, mealY);
 
         curY += dayH + 16;
     }
@@ -2826,16 +2873,22 @@ function buildExportCanvas() {
     y += 24;
     // lunch
     if (selections.lunchCarb !== null || selections.lunchProtein !== null) {
-        var lunchItemCount = 1; // extras row
-        if (selections.lunchCarb !== null) lunchItemCount++;
+        var lunchItemCount = 3; // verduras + aceite + fruta
+        if (selections.lunchCarb !== null) {
+            lunchItemCount++;
+            if (lunchCarbs[selections.lunchCarb].altName) lunchItemCount++;
+        }
         if (selections.lunchProtein !== null) lunchItemCount++;
         y += 56 + lunchItemCount * 34 + 24;
         y += 24;
     }
     // dinner
     if (selections.dinnerCarb !== null || selections.dinnerProtein !== null) {
-        var dinnerItemCount = 1;
-        if (selections.dinnerCarb !== null) dinnerItemCount++;
+        var dinnerItemCount = 3; // verduras + aceite + fruta
+        if (selections.dinnerCarb !== null) {
+            dinnerItemCount++;
+            if (dinnerCarbs[selections.dinnerCarb].altName) dinnerItemCount++;
+        }
         if (selections.dinnerProtein !== null) dinnerItemCount++;
         y += 56 + dinnerItemCount * 34 + 24;
         y += 24;
@@ -2968,10 +3021,16 @@ function buildExportCanvas() {
     if (selections.breakfast !== null) {
         var bOpt = breakfastOptions[selections.breakfast];
         var bItems = bOpt.items.map(function(it) {
-            var amt = it.amount !== null ? scaleAmount(it.amount, carbRatio) + it.unit : '';
-            return { name: it.text, amount: amt };
+            var amt = it.amount !== null ? scaleAmount(it.amount, carbRatio) + (it.unit || 'g') : '';
+            var name = it.text;
+            if (it.extra) {
+                var extraScaled = scaleAmount(it.extraBase, carbRatio);
+                var extraText = it.extra.replace(/\{(\d+)\}/, extraScaled);
+                name += '  ' + extraText;
+            }
+            return { name: name, amount: amt };
         });
-        curY = drawMealSection('Desayuno  -  ' + bOpt.name, bItems, curY);
+        curY = drawMealSection('Desayuno  —  ' + bOpt.name, bItems, curY);
     }
 
     // Lunch
@@ -2979,7 +3038,12 @@ function buildExportCanvas() {
         var lItems = [];
         if (selections.lunchCarb !== null) {
             var lc = lunchCarbs[selections.lunchCarb];
-            lItems.push({ name: lc.name + (lc.tag ? ' (' + lc.tag + ')' : ''), amount: scaleAmount(lc.base, carbRatio) + (lc.unit || 'g') });
+            var lcAmt = scaleAmount(lc.base, carbRatio) + (lc.unit || 'g');
+            lItems.push({ name: lc.name, amount: lcAmt });
+            if (lc.altName) {
+                var lcAltAmt = scaleAmount(lc.altBase, carbRatio) + (lc.unit || 'g');
+                lItems.push({ name: '  ↳ ó ' + lc.altName, amount: lcAltAmt });
+            }
         }
         if (selections.lunchProtein !== null) {
             var lp = lunchProteins[selections.lunchProtein];
@@ -2987,7 +3051,9 @@ function buildExportCanvas() {
         }
         var vegG = scaleAmount(200, carbRatio);
         var oilMl = scaleAmount(EXTRAS_OIL_ML, carbRatio);
-        lItems.push({ name: '+ Verduras / Aceite oliva / 1 Fruta', amount: vegG + 'g / ' + oilMl + 'ml' });
+        lItems.push({ name: 'Verduras / ensalada', amount: '~' + vegG + 'g' });
+        lItems.push({ name: 'Aceite de oliva', amount: oilMl + 'ml' });
+        lItems.push({ name: '1 pieza de fruta', amount: '' });
         curY = drawMealSection('Almuerzo', lItems, curY);
     }
 
@@ -2996,7 +3062,12 @@ function buildExportCanvas() {
         var dItems = [];
         if (selections.dinnerCarb !== null) {
             var dc = dinnerCarbs[selections.dinnerCarb];
-            dItems.push({ name: dc.name + (dc.tag ? ' (' + dc.tag + ')' : ''), amount: scaleAmount(dc.base, carbRatio) + (dc.unit || 'g') });
+            var dcAmt = scaleAmount(dc.base, carbRatio) + (dc.unit || 'g');
+            dItems.push({ name: dc.name, amount: dcAmt });
+            if (dc.altName) {
+                var dcAltAmt = scaleAmount(dc.altBase, carbRatio) + (dc.unit || 'g');
+                dItems.push({ name: '  ↳ ó ' + dc.altName, amount: dcAltAmt });
+            }
         }
         if (selections.dinnerProtein !== null) {
             var dp = dinnerProteins[selections.dinnerProtein];
@@ -3004,7 +3075,9 @@ function buildExportCanvas() {
         }
         var vegGd = scaleAmount(200, carbRatio);
         var oilMld = scaleAmount(EXTRAS_OIL_ML, carbRatio);
-        dItems.push({ name: '+ Verduras / Aceite oliva / 1 Fruta', amount: vegGd + 'g / ' + oilMld + 'ml' });
+        dItems.push({ name: 'Verduras / ensalada', amount: '~' + vegGd + 'g' });
+        dItems.push({ name: 'Aceite de oliva', amount: oilMld + 'ml' });
+        dItems.push({ name: '1 pieza de fruta', amount: '' });
         curY = drawMealSection('Cena', dItems, curY);
     }
 
