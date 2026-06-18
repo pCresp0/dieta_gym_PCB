@@ -3573,42 +3573,44 @@ function renderTrainerContent() {
     setupTrainerTabsVisibility();
 }
 
-var trainerTabsObserver = null;
+var trainerTabsScrollHandler = null;
 function setupTrainerTabsVisibility() {
-    if (trainerTabsObserver) trainerTabsObserver.disconnect();
+    if (trainerTabsScrollHandler) window.removeEventListener('scroll', trainerTabsScrollHandler);
     var extrasSection = document.querySelector('.trainer-extras-section');
     var tabsNav = document.querySelector('.trainer-tabs-nav');
     if (!tabsNav || !extrasSection) return;
-    // Only trigger when the section reaches the top 15% of viewport (near the sticky tabs)
-    trainerTabsObserver = new IntersectionObserver(function(entries) {
-        entries.forEach(function(entry) {
-            if (entry.isIntersecting) {
-                tabsNav.classList.add('tabs-hidden');
-            } else {
-                tabsNav.classList.remove('tabs-hidden');
-            }
-        });
-    }, { threshold: 0, rootMargin: '0px 0px -85% 0px' });
-    trainerTabsObserver.observe(extrasSection);
+    // Get the nav's sticky top position (where it sits when visible)
+    var navHeight = tabsNav.offsetHeight;
+    trainerTabsScrollHandler = function() {
+        var sectionTop = extrasSection.getBoundingClientRect().top;
+        // Hide tabs when the section reaches the bottom edge of where tabs would be
+        if (sectionTop <= navHeight + 10) {
+            tabsNav.classList.add('tabs-hidden');
+        } else {
+            tabsNav.classList.remove('tabs-hidden');
+        }
+    };
+    window.addEventListener('scroll', trainerTabsScrollHandler, { passive: true });
+    trainerTabsScrollHandler();
 }
 
-var publicTabsObserver = null;
+var publicTabsScrollHandler = null;
 function setupPublicTabsVisibility() {
-    if (publicTabsObserver) publicTabsObserver.disconnect();
+    if (publicTabsScrollHandler) window.removeEventListener('scroll', publicTabsScrollHandler);
     var nutritionSection = document.getElementById('nutrition-summary');
     var tabsNav = document.querySelector('.main-tabs-nav:not(.trainer-tabs-nav)');
     if (!tabsNav || !nutritionSection) return;
-    // Only trigger when the section reaches the top 15% of viewport (near the sticky tabs)
-    publicTabsObserver = new IntersectionObserver(function(entries) {
-        entries.forEach(function(entry) {
-            if (entry.isIntersecting) {
-                tabsNav.classList.add('tabs-hidden');
-            } else {
-                tabsNav.classList.remove('tabs-hidden');
-            }
-        });
-    }, { threshold: 0, rootMargin: '0px 0px -85% 0px' });
-    publicTabsObserver.observe(nutritionSection);
+    var navHeight = tabsNav.offsetHeight;
+    publicTabsScrollHandler = function() {
+        var sectionTop = nutritionSection.getBoundingClientRect().top;
+        if (sectionTop <= navHeight + 10) {
+            tabsNav.classList.add('tabs-hidden');
+        } else {
+            tabsNav.classList.remove('tabs-hidden');
+        }
+    };
+    window.addEventListener('scroll', publicTabsScrollHandler, { passive: true });
+    publicTabsScrollHandler();
 }
 
 function renderTrainerValidator() {
