@@ -1188,7 +1188,7 @@ document.getElementById('next-5').addEventListener('click', function() {
             'Para <strong>perder grasa</strong> necesitas un <strong>déficit calórico</strong>: ingerir menos calorías de las que gastas. ' +
             'Te recomendamos un <strong>déficit moderado del 20%</strong> (~' + deficitAbs + ' kcal/día menos). ' +
             'La evidencia científica muestra que déficits del 15-25% son óptimos para perder grasa preservando masa muscular ' +
-            '<em>(<a href="https://pubmed.ncbi.nlm.nih.gov/24864135/" target="_blank" rel="noopener noreferrer">Helms et al., 2014</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/25028999/" target="_blank" rel="noopener noreferrer">Trexler et al., 2014</a>)</em>. ' +
+            '<em>(<a href="https://pubmed.ncbi.nlm.nih.gov/24864135/" target="_blank" rel="noopener noreferrer">Helms et al., 2014</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/24571926/" target="_blank" rel="noopener noreferrer">Trexler et al., 2014</a>)</em>. ' +
             'Déficits más agresivos aumentan la pérdida de músculo y reducen la adherencia.';
     } else if (userGoal === 'recomp') {
         document.getElementById('ob-goal-label').textContent = '🔄 Recomendado';
@@ -1197,7 +1197,7 @@ document.getElementById('next-5').addEventListener('click', function() {
             'La <strong>recomposición corporal</strong> busca ganar músculo y perder grasa a la vez. ' +
             'Se consigue con un <strong>déficit mínimo (~5%)</strong>, alta proteína (1.6-2.2g/kg) y entrenamiento de fuerza. ' +
             'Estudios demuestran que personas con experiencia intermedia pueden lograrlo con alta adherencia al entrenamiento ' +
-            '<em>(<a href="https://pubmed.ncbi.nlm.nih.gov/32217577/" target="_blank" rel="noopener noreferrer">Barakat et al., 2020</a>)</em>. Es un proceso más lento que bulk+cut pero mejora la composición corporal sin fases extremas.';
+            '<em>(<a href="https://doi.org/10.1519/SSC.0000000000000584" target="_blank" rel="noopener noreferrer">Barakat et al., 2020</a>)</em>. Es un proceso más lento que bulk+cut pero mejora la composición corporal sin fases extremas.';
     } else if (userGoal === 'bulk') {
         document.getElementById('ob-goal-label').textContent = '💪 Recomendado';
         document.getElementById('ob-rec-sub').textContent = 'kcal/día · Superávit del ~15%';
@@ -1205,7 +1205,7 @@ document.getElementById('next-5').addEventListener('click', function() {
             'Para <strong>ganar masa muscular</strong> necesitas un <strong>superávit calórico</strong>: comer por encima de tu gasto. ' +
             'Te recomendamos un <strong>superávit moderado del 15%</strong> (~' + surplusAbs + ' kcal/día más). ' +
             'Un superávit controlado maximiza la síntesis proteica minimizando la ganancia de grasa ' +
-            '<em>(<a href="https://pubmed.ncbi.nlm.nih.gov/31182742/" target="_blank" rel="noopener noreferrer">Slater et al., 2019</a>)</em>. Superávits excesivos no aceleran la ganancia muscular, solo acumulan más grasa.';
+            '<em>(<a href="https://pubmed.ncbi.nlm.nih.gov/31482093/" target="_blank" rel="noopener noreferrer">Slater et al., 2019</a>)</em>. Superávits excesivos no aceleran la ganancia muscular, solo acumulan más grasa.';
     } else {
         document.getElementById('ob-goal-label').textContent = '⚖️ Recomendado';
         document.getElementById('ob-rec-sub').textContent = 'kcal/día · Mantenimiento';
@@ -1265,7 +1265,7 @@ document.getElementById('next-5').addEventListener('click', function() {
             title: 'Proteína alta: clave en déficit',
             text: 'En déficit calórico, la proteína es tu mejor aliada para <strong>preservar masa muscular</strong>. ' +
                   'Se recomienda ingerir entre <strong>1.6-2.4g de proteína por kg</strong> de peso corporal al día ' +
-                  '<em>(<a href="https://pubmed.ncbi.nlm.nih.gov/28698222/" target="_blank" rel="noopener noreferrer">Jäger et al., ISSN 2017</a>)</em>. Esta dieta ya está diseñada con alta proteína para proteger tu músculo.'
+                  '<em>(<a href="https://pubmed.ncbi.nlm.nih.gov/28642676/" target="_blank" rel="noopener noreferrer">Jäger et al., ISSN 2017</a>)</em>. Esta dieta ya está diseñada con alta proteína para proteger tu músculo.'
         });
     }
 
@@ -1312,12 +1312,12 @@ document.getElementById('next-5').addEventListener('click', function() {
         if (alcoholLevel === 'occasional') {
             tipText = 'Tu consumo es <strong>bajo-moderado</strong>. Aun así, el alcohol aporta ~' + alcoholDailyKcal + ' kcal/día de media ' +
                       'que este plan ya descuenta de tu presupuesto calórico de comida. El alcohol <strong>inhibe la oxidación de grasas</strong> temporalmente ' +
-                      '<em>(<a href="https://pubmed.ncbi.nlm.nih.gov/1318281/" target="_blank" rel="noopener noreferrer">Suter et al., 1992</a>)</em> y reduce la síntesis proteica muscular un 24-37% ' +
+                      '<em>(<a href="https://pubmed.ncbi.nlm.nih.gov/1545851/" target="_blank" rel="noopener noreferrer">Suter et al., 1992</a>)</em> y reduce la síntesis proteica muscular un 24-37% ' +
                       '<em>(<a href="https://pubmed.ncbi.nlm.nih.gov/24533082/" target="_blank" rel="noopener noreferrer">Parr et al., 2014</a>)</em>. Si puedes reducirlo, mejor; si no, es preferible concentrarlo en 1-2 días sin entrenamiento.';
         } else {
             tipText = 'Tu consumo es <strong>' + (alcoholLevel === 'moderate' ? 'moderado' : 'frecuente') + '</strong>, lo que supone ~<strong>' + alcoholDailyKcal + ' kcal/día</strong> extra de media. ' +
                       'Hemos ajustado tu presupuesto de comida para compensar esas calorías. Pero el impacto va más allá de las calorías: ' +
-                      'el alcohol <strong>inhibe la quema de grasa</strong> durante horas <em>(<a href="https://pubmed.ncbi.nlm.nih.gov/1318281/" target="_blank" rel="noopener noreferrer">Suter et al., 1992</a>)</em>, ' +
+                      'el alcohol <strong>inhibe la quema de grasa</strong> durante horas <em>(<a href="https://pubmed.ncbi.nlm.nih.gov/1545851/" target="_blank" rel="noopener noreferrer">Suter et al., 1992</a>)</em>, ' +
                       'reduce la <strong>síntesis proteica muscular</strong> un 24-37% <em>(<a href="https://pubmed.ncbi.nlm.nih.gov/24533082/" target="_blank" rel="noopener noreferrer">Parr et al., 2014</a>)</em>, ' +
                       'y empeora la calidad del sueño (que es clave para la recuperación). ' +
                       'Reducir a ≤2 días/semana con ≤2 bebidas por ocasión mejoraría significativamente tus resultados.';
@@ -1383,7 +1383,7 @@ function populateDisclaimer() {
                 '<p>Tu consumo de alcohol supone aproximadamente <strong>~' + dailyKcal + ' kcal/día</strong> de media que hemos descontado de tu presupuesto de comida. ' +
                 'La evidencia científica muestra que:</p>' +
                 '<ul class="disclaimer-refs">' +
-                '<li>El alcohol <strong>inhibe la oxidación de grasas</strong> durante 4-8 horas tras su consumo <em>(<a href="https://pubmed.ncbi.nlm.nih.gov/1318281/" target="_blank" rel="noopener noreferrer">Suter et al., Am J Clin Nutr 1992</a>)</em></li>' +
+                '<li>El alcohol <strong>inhibe la oxidación de grasas</strong> durante 4-8 horas tras su consumo <em>(<a href="https://pubmed.ncbi.nlm.nih.gov/1545851/" target="_blank" rel="noopener noreferrer">Suter et al., Am J Clin Nutr 1992</a>)</em></li>' +
                 '<li>Reduce la <strong>síntesis proteica muscular</strong> un 24-37% incluso con ingesta proteica adecuada <em>(<a href="https://pubmed.ncbi.nlm.nih.gov/24533082/" target="_blank" rel="noopener noreferrer">Parr et al., PLoS ONE 2014</a>)</em></li>' +
                 '<li>El mayor estudio global (<a href="https://pubmed.ncbi.nlm.nih.gov/30146330/" target="_blank" rel="noopener noreferrer">GBD 2018, Lancet</a>) concluye que el nivel de consumo que <strong>minimiza riesgos para la salud es cero</strong></li>' +
                 '<li>Si decides beber, limitar a <strong>≤2 bebidas, ≤2 días/semana</strong>, preferiblemente en días sin entrenamiento, minimiza el impacto</li>' +
@@ -2211,7 +2211,7 @@ var macroTooltips = {
                 '<ul class="macro-tip-links">' +
                 '<li><a href="https://jissn.biomedcentral.com/articles/10.1186/s12970-017-0177-8" target="_blank" rel="noopener noreferrer">Jäger et al. 2017 – ISSN Position Stand</a></li>' +
                 '<li><a href="https://pubmed.ncbi.nlm.nih.gov/29182451/" target="_blank" rel="noopener noreferrer">Hector &amp; Phillips 2018 – Protein &amp; fat loss (IJSNEM)</a></li>' +
-                '<li><a href="https://pubmed.ncbi.nlm.nih.gov/25550171/" target="_blank" rel="noopener noreferrer">Volek et al. 2015 – Dietary fat &amp; performance</a></li>' +
+                '<li><a href="https://pubmed.ncbi.nlm.nih.gov/25275931/" target="_blank" rel="noopener noreferrer">Volek et al. 2015 – Dietary fat &amp; performance</a></li>' +
                 '</ul>';
         }
     }
