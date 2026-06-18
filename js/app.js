@@ -2187,6 +2187,28 @@ function populateBodyTimeline() {
     body.innerHTML = html;
 }
 
+// Floating info tooltip for diet buttons (position: fixed to escape sticky stacking)
+(function() {
+    var floatingTip = document.createElement('div');
+    floatingTip.className = 'btn-info-floating';
+    document.body.appendChild(floatingTip);
+
+    document.querySelectorAll('.random-diet-btn[data-info]').forEach(function(btn) {
+        btn.addEventListener('mouseenter', function() {
+            var text = btn.getAttribute('data-info');
+            if (!text) return;
+            floatingTip.textContent = text;
+            var rect = btn.getBoundingClientRect();
+            floatingTip.style.top = (rect.bottom + 8) + 'px';
+            floatingTip.style.left = (rect.left + rect.width / 2) + 'px';
+            floatingTip.classList.add('visible');
+        });
+        btn.addEventListener('mouseleave', function() {
+            floatingTip.classList.remove('visible');
+        });
+    });
+})();
+
 // Info tooltip on mobile (long press OR info button tap to show, tap elsewhere to hide)
 (function() {
     var infoTimer = null;
