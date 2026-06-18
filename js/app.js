@@ -1183,8 +1183,33 @@ function proceedToStep6() {
 
     document.getElementById('ob-tdee').textContent = result.tdee;
     document.getElementById('ob-recommended').textContent = recommendedKcal;
+
+    // Populate TDEE breakdown
+    var trainExtra = result.tdee - result.neat - result.stepsKcal;
+    var breakdownHTML = '<div class="tdee-row"><span>🔥 Metabolismo basal (BMR)</span><strong>' + result.bmr + ' kcal</strong></div>';
+    var neatExtra = result.neat - result.bmr;
+    breakdownHTML += '<div class="tdee-row"><span>🚶 Actividad diaria (NEAT)</span><strong>+' + neatExtra + ' kcal</strong></div>';
+    if (result.stepsKcal > 0) {
+        breakdownHTML += '<div class="tdee-row"><span>👟 Pasos diarios</span><strong>+' + result.stepsKcal + ' kcal</strong></div>';
+    }
+    if (trainExtra > 0) {
+        breakdownHTML += '<div class="tdee-row"><span>🏋️ Entrenamiento</span><strong>+' + Math.round(trainExtra) + ' kcal</strong></div>';
+    }
+    breakdownHTML += '<div class="tdee-row tdee-total"><span>= TDEE total</span><strong>' + result.tdee + ' kcal/día</strong></div>';
+    document.getElementById('tdee-breakdown').innerHTML = breakdownHTML;
+
     return true;
 }
+
+// TDEE info popup toggle
+document.getElementById('tdee-info-btn').addEventListener('click', function(e) {
+    e.stopPropagation();
+    var popup = document.getElementById('tdee-info-popup');
+    popup.style.display = popup.style.display === 'none' ? 'block' : 'none';
+});
+document.getElementById('tdee-info-close').addEventListener('click', function() {
+    document.getElementById('tdee-info-popup').style.display = 'none';
+});
 
 document.getElementById('next-5').addEventListener('click', function() {
     if (!userGoal) return;

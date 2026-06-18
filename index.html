@@ -305,9 +305,16 @@
                 <div class="onboarding-results">
                     <div class="ob-result-row">
                         <div class="ob-result-card">
-                            <span class="ob-result-label">TDEE</span>
+                            <span class="ob-result-label">TDEE <button class="tdee-info-btn" id="tdee-info-btn" type="button" aria-label="Qué es el TDEE">ℹ️</button></span>
                             <span class="ob-result-value" id="ob-tdee">--</span>
                             <span class="ob-result-sub">kcal/día mantenimiento</span>
+                            <div class="tdee-info-popup" id="tdee-info-popup" style="display:none">
+                                <div class="tdee-info-close" id="tdee-info-close">✕</div>
+                                <h4>¿Qué es el TDEE?</h4>
+                                <p>El <strong>TDEE</strong> (Total Daily Energy Expenditure) es el total de calorías que tu cuerpo quema al día. Es la suma de:</p>
+                                <div class="tdee-breakdown" id="tdee-breakdown"></div>
+                                <p class="tdee-info-note">Calculado con la fórmula <strong>Mifflin-St Jeor</strong>, la más precisa para población general según la ADA.</p>
+                            </div>
                         </div>
                         <div class="ob-result-card highlight">
                             <span class="ob-result-label" id="ob-goal-label">Recomendado</span>
