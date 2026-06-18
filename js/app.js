@@ -1397,6 +1397,23 @@ document.getElementById('start-plan').addEventListener('click', function() {
     activateTab(getDefaultTab());
     populateDisclaimer();
     saveAllState();
+
+    // Show welcome modal on first visit
+    if (!localStorage.getItem('welcomeModalSeen')) {
+        document.getElementById('welcome-modal').style.display = 'flex';
+    }
+});
+
+document.getElementById('welcome-modal-ok').addEventListener('click', function() {
+    document.getElementById('welcome-modal').style.display = 'none';
+    localStorage.setItem('welcomeModalSeen', '1');
+});
+
+document.getElementById('welcome-modal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        this.style.display = 'none';
+        localStorage.setItem('welcomeModalSeen', '1');
+    }
 });
 
 // Reconfigure

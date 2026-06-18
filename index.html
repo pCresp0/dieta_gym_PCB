@@ -607,6 +607,26 @@
         </div>
     </div>
 
+    <!-- WELCOME MODAL (shown once on first entry) -->
+    <div class="app-modal-overlay" id="welcome-modal" style="display:none;">
+        <div class="app-modal welcome-modal">
+            <div class="app-modal-body">
+                <h3 style="margin:0 0 12px;font-size:1.1rem;color:var(--text-primary);">👋 ¡Bienvenido a tu plan!</h3>
+                <p style="margin:0 0 14px;white-space:normal;">Aquí tienes tu dieta personalizada. Esto es lo que puedes hacer:</p>
+                <ol class="how-steps" style="margin:0 0 8px;padding-left:20px;">
+                    <li><strong>Elige tu comida:</strong> Selecciona una opción de desayuno, comida y cena. Tú decides tu dieta.</li>
+                    <li><strong>Gramajes automáticos:</strong> Las cantidades se ajustan solas según las kcal que configures con el slider.</li>
+                    <li><strong>Exporta tu dieta:</strong> Cuando tengas todo elegido, expórtala como imagen o PDF para tenerla siempre a mano.</li>
+                    <li><strong>¿Sin ganas de elegir?</strong> Usa <em>Dieta aleatoria</em> y te monta una completa al instante.</li>
+                    <li><strong>Plan semanal:</strong> Genera 7 días variados de golpe y descárgalo en imagen o PDF.</li>
+                </ol>
+            </div>
+            <div class="app-modal-actions">
+                <button class="app-modal-btn app-modal-btn-primary" id="welcome-modal-ok">¡Entendido, vamos! 💪</button>
+            </div>
+        </div>
+    </div>
+
     <!-- APP ALERT/CONFIRM MODAL -->
     <div class="app-modal-overlay" id="app-modal-overlay" style="display:none;">
         <div class="app-modal">

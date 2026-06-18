@@ -2742,6 +2742,18 @@ body {
     background: var(--accent-hover);
 }
 
+.welcome-modal {
+    max-width: 520px;
+}
+
+.welcome-modal .how-steps {
+    line-height: 1.8;
+}
+
+.welcome-modal .how-steps li {
+    margin-bottom: 6px;
+}
+
 .app-modal-btn-secondary {
     background: var(--border);
     color: var(--text-primary);
