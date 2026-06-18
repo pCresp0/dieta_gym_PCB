@@ -187,6 +187,8 @@ var recommendedKcal = 2500;
 var userGoal = null;
 var userTdee = null;
 var userName = '';
+var userPath = null; // 'guided' or 'deadline'
+var deadlineWeeks = null;
 var selections = { breakfast:null, lunchCarb:null, lunchProtein:null, dinnerCarb:null, dinnerProtein:null };
 
 function getExportFileName(prefix) {
@@ -1095,8 +1097,8 @@ function getRecommendedGoal() {
 function showGoalRecommendation() {
     var recommended = getRecommendedGoal();
     var recEl = document.getElementById('goal-recommendation');
-    // Remove previous recommended badges
-    document.querySelectorAll('.goal-card').forEach(function(c) { c.classList.remove('recommended'); });
+    // Remove previous recommended badges (only in guided mode cards)
+    document.querySelectorAll('#goal-cards .goal-card').forEach(function(c) { c.classList.remove('recommended'); });
 
     if (!recommended) {
         // If no BF selected, try to infer from experience + diet history
@@ -1115,7 +1117,7 @@ function showGoalRecommendation() {
         var msg = 'Según tu perfil, te recomendamos: <strong>' + goalIcons[recommended] + ' ' + recLabel + '</strong>';
         recEl.innerHTML = msg;
         recEl.style.display = '';
-        var recCard = document.querySelector('.goal-card[data-goal="' + recommended + '"]');
+        var recCard = document.querySelector('#goal-cards .goal-card[data-goal="' + recommended + '"]');
         if (recCard) recCard.classList.add('recommended');
         return;
     }
@@ -1129,7 +1131,7 @@ function showGoalRecommendation() {
     recEl.style.display = '';
 
     // Highlight the recommended card
-    var recCard = document.querySelector('.goal-card[data-goal="' + recommended + '"]');
+    var recCard = document.querySelector('#goal-cards .goal-card[data-goal="' + recommended + '"]');
     if (recCard) recCard.classList.add('recommended');
 }
 
@@ -1228,21 +1230,151 @@ document.getElementById('next-4').addEventListener('click', function() {
         if (activity === '') { showAppAlert('Rellena todos los campos para continuar.'); return; }
         showAppAlert('Indica tu media de pasos diarios o marca "No lo sé".'); return;
     }
-    showGoalRecommendation();
     showStep(5);
 });
 
 document.getElementById('back-5').addEventListener('click', function() { showStep(4); });
 
-// Goal selection
+// Path selector
+document.getElementById('path-selector').addEventListener('click', function(e) {
+    var card = e.target.closest('.path-card');
+    if (!card) return;
+    document.querySelectorAll('.path-card').forEach(function(c) { c.classList.remove('selected'); });
+    card.classList.add('selected');
+    userPath = card.dataset.path;
+
+    var guidedMode = document.getElementById('guided-mode');
+    var deadlineMode = document.getElementById('deadline-mode');
+    var btn = document.getElementById('next-5');
+
+    if (userPath === 'guided') {
+        guidedMode.style.display = '';
+        deadlineMode.style.display = 'none';
+        showGoalRecommendation();
+        btn.classList.toggle('disabled', !userGoal);
+    } else {
+        guidedMode.style.display = 'none';
+        deadlineMode.style.display = '';
+        btn.classList.add('disabled');
+        // Check if already has selections
+        if (userGoal && deadlineWeeks) btn.classList.remove('disabled');
+    }
+});
+
+// Goal selection (guided mode)
 document.getElementById('goal-cards').addEventListener('click', function(e) {
     var card = e.target.closest('.goal-card');
     if (!card) return;
-    document.querySelectorAll('.goal-card').forEach(function(c){c.classList.remove('selected');});
+    document.querySelectorAll('#goal-cards .goal-card').forEach(function(c){c.classList.remove('selected');});
     card.classList.add('selected');
     userGoal = card.dataset.goal;
     document.getElementById('next-5').classList.remove('disabled');
 });
+
+// Goal selection (deadline mode)
+document.getElementById('deadline-goal-cards').addEventListener('click', function(e) {
+    var card = e.target.closest('.goal-card');
+    if (!card) return;
+    document.querySelectorAll('#deadline-goal-cards .goal-card').forEach(function(c){c.classList.remove('selected');});
+    card.classList.add('selected');
+    userGoal = card.dataset.goal;
+    document.getElementById('deadline-fields').style.display = '';
+    updateDeadlineSummary();
+    if (deadlineWeeks) document.getElementById('next-5').classList.remove('disabled');
+});
+
+// Deadline weeks change
+document.getElementById('deadline-weeks').addEventListener('change', function() {
+    deadlineWeeks = parseInt(this.value) || null;
+    updateDeadlineSummary();
+    if (userGoal && deadlineWeeks) document.getElementById('next-5').classList.remove('disabled');
+    else document.getElementById('next-5').classList.add('disabled');
+});
+
+function updateDeadlineSummary() {
+    var el = document.getElementById('deadline-summary');
+    if (!userGoal || !deadlineWeeks) { el.innerHTML = ''; return; }
+
+    var w = parseFloat(document.getElementById('calc-weight').value) || 75;
+    var result = calculateTDEE();
+    if (!result) { el.innerHTML = ''; return; }
+    var tdee = result.tdee;
+
+    var summary = '';
+    if (userGoal === 'cut') {
+        // Safe rate: 0.5-1% BW/week
+        var safeRate = w * 0.007; // ~0.7% BW/week (middle ground)
+        var expectedLoss = Math.round(safeRate * deadlineWeeks * 10) / 10;
+        var deficit = Math.round(safeRate * 1100); // 7700/7 ≈ 1100
+        var deficitPct = Math.round(deficit / tdee * 100);
+
+        if (deficitPct > 25) {
+            summary = '<span class="deadline-warning">⚠️ Para tu plazo de ' + deadlineWeeks + ' semanas, el déficit necesario (~' + deficitPct + '%) es agresivo.</span> ' +
+                'Déficits mayores del 25% aumentan la pérdida de músculo y la fatiga. ' +
+                '<strong>Puedes continuar</strong>, pero considera ampliar el plazo para mejores resultados. ' +
+                '<br><br>Déficit aplicado: <strong>~' + deficit + ' kcal/día</strong> · Pérdida estimada: <strong>~' + expectedLoss + ' kg</strong> en ' + deadlineWeeks + ' semanas.';
+        } else {
+            summary = '📊 Con un déficit del <strong>~' + deficitPct + '%</strong> (~' + deficit + ' kcal/día), ' +
+                'puedes perder aproximadamente <strong>' + expectedLoss + ' kg de grasa</strong> en ' + deadlineWeeks + ' semanas. ' +
+                'Ritmo saludable y sostenible.';
+        }
+    } else if (userGoal === 'bulk') {
+        var weeklyGain = 0.15; // ~0.15kg/week realista con grasa incluida
+        var expectedGain = Math.round(weeklyGain * deadlineWeeks * 10) / 10;
+        var muscleGain = Math.round(expectedGain * 0.5 * 10) / 10; // ~50% muscle
+        var surplus = Math.round(weeklyGain * 1100);
+        var surplusPct = Math.round(surplus / tdee * 100);
+
+        if (deadlineWeeks < 8) {
+            summary = '<span class="deadline-warning">⚠️ ' + deadlineWeeks + ' semanas es poco tiempo para ganar músculo significativo.</span> ' +
+                'La ganancia muscular real es un proceso lento (~0.25kg músculo/semana max en principiantes). ' +
+                '<strong>Puedes continuar</strong>, pero gestiona expectativas. ' +
+                '<br><br>Superávit: <strong>~' + surplus + ' kcal/día</strong> · Ganancia estimada: <strong>~' + expectedGain + ' kg</strong> (' + muscleGain + ' kg músculo) en ' + deadlineWeeks + ' semanas.';
+        } else {
+            summary = '📊 Con un superávit del <strong>~' + surplusPct + '%</strong> (~' + surplus + ' kcal/día), ' +
+                'puedes ganar aproximadamente <strong>' + expectedGain + ' kg</strong> (' + muscleGain + ' kg músculo) en ' + deadlineWeeks + ' semanas.';
+        }
+    } else if (userGoal === 'recomp') {
+        summary = '📊 La recomposición corporal es un proceso gradual. En <strong>' + deadlineWeeks + ' semanas</strong> puedes esperar: ' +
+            'reducción visible de grasa + aumento de fuerza y tono muscular. No esperes grandes cambios en la báscula — el progreso se mide en el espejo y las marcas del gym.';
+        if (deadlineWeeks < 8) {
+            summary = '<span class="deadline-warning">⚠️ La recomposición requiere más tiempo para ser visible.</span> ' +
+                'Los primeros resultados claros suelen aparecer a partir de las 8-12 semanas. ' +
+                '<strong>Puedes continuar</strong>, pero no esperes milagros en ' + deadlineWeeks + ' semanas.' +
+                '<br><br>' + summary;
+        }
+    } else { // maintain
+        summary = '📊 En <strong>' + deadlineWeeks + ' semanas</strong> a mantenimiento: peso estable, mejor digestión, más energía. ' +
+            'Si entrenas fuerza, puedes mejorar ligeramente la composición corporal sin cambiar el peso.';
+    }
+
+    el.innerHTML = summary;
+}
+
+// Override getRecommendedKcal for deadline mode
+function getDeadlineKcal(tdee, goal, weeks) {
+    var w = parseFloat(document.getElementById('calc-weight').value) || 75;
+    var appetite = document.getElementById('calc-appetite') ? document.getElementById('calc-appetite').value : '';
+    var dietHist = document.getElementById('calc-diet-history') ? document.getElementById('calc-diet-history').value : '';
+    var conservative = (appetite === 'high') || (dietHist === 'yoyo') || (dietHist === 'tried');
+
+    if (goal === 'cut') {
+        var safeRate = w * 0.007; // 0.7% BW/week
+        var deficit = Math.round(safeRate * 1100);
+        // Cap at 25% max deficit
+        var maxDeficit = Math.round(tdee * 0.25);
+        deficit = Math.min(deficit, maxDeficit);
+        if (conservative) deficit = Math.round(deficit * 0.8); // softer for high-appetite/yoyo
+        return Math.round((tdee - deficit) / 100) * 100;
+    } else if (goal === 'bulk') {
+        var surplus = Math.round(0.15 * 1100); // 0.15kg/week gain
+        return Math.round((tdee + surplus) / 100) * 100;
+    } else if (goal === 'recomp') {
+        return Math.round(tdee * 0.95 / 100) * 100;
+    } else {
+        return Math.round(tdee / 100) * 100;
+    }
+}
 
 function getGoalMismatchWarning(recommended, chosen) {
     var bf = parseFloat(document.getElementById('calc-bf').value) || 0;
@@ -1303,7 +1435,13 @@ function proceedToStep6() {
     var btn = document.getElementById('next-5');
     delete btn.dataset.confirmed;
     userTdee = result.tdee;
-    recommendedKcal = getRecommendedKcal(result.tdee, userGoal);
+
+    // Use deadline calc if in deadline mode
+    if (userPath === 'deadline' && deadlineWeeks) {
+        recommendedKcal = getDeadlineKcal(result.tdee, userGoal, deadlineWeeks);
+    } else {
+        recommendedKcal = getRecommendedKcal(result.tdee, userGoal);
+    }
 
     document.getElementById('ob-tdee').textContent = result.tdee;
     document.getElementById('ob-recommended').textContent = recommendedKcal;
@@ -1338,17 +1476,26 @@ document.getElementById('tdee-info-close').addEventListener('click', function() 
 document.getElementById('next-5').addEventListener('click', function() {
     if (!userGoal) return;
 
-    // Check if user chose a different goal than recommended
-    var recommended = getRecommendedGoal();
-    if (recommended && userGoal !== recommended && !this.dataset.confirmed) {
-        var warnings = getGoalMismatchWarning(recommended, userGoal);
-        if (warnings) {
-            var self = this;
-            showAppConfirm(warnings, function() {
-                self.dataset.confirmed = 'true';
-                self.click();
-            });
-            return;
+    // Validate deadline mode
+    if (userPath === 'deadline' && !deadlineWeeks) {
+        showAppAlert('Selecciona el plazo de tiempo para tu objetivo.');
+        highlightInvalidFields(['deadline-weeks']);
+        return;
+    }
+
+    // Check if user chose a different goal than recommended (only in guided mode)
+    if (userPath === 'guided') {
+        var recommended = getRecommendedGoal();
+        if (recommended && userGoal !== recommended && !this.dataset.confirmed) {
+            var warnings = getGoalMismatchWarning(recommended, userGoal);
+            if (warnings) {
+                var self = this;
+                showAppConfirm(warnings, function() {
+                    self.dataset.confirmed = 'true';
+                    self.click();
+                });
+                return;
+            }
         }
     }
 
@@ -1356,10 +1503,12 @@ document.getElementById('next-5').addEventListener('click', function() {
 
     var deficitAbs = userTdee - recommendedKcal;
     var surplusAbs = recommendedKcal - userTdee;
+    var deadlineLabel = (userPath === 'deadline' && deadlineWeeks) ? ' · ' + deadlineWeeks + ' semanas' : '';
 
     if (userGoal === 'cut') {
         document.getElementById('ob-goal-label').textContent = '🔥 Recomendado';
-        document.getElementById('ob-rec-sub').textContent = 'kcal/día · Déficit del ~20%';
+        var defPct = Math.round(deficitAbs / userTdee * 100);
+        document.getElementById('ob-rec-sub').textContent = 'kcal/día · Déficit del ~' + defPct + '%' + deadlineLabel;
         document.getElementById('ob-explanation').innerHTML =
             'Para <strong>perder grasa</strong> necesitas un <strong>déficit calórico</strong>: ingerir menos calorías de las que gastas. ' +
             'Te recomendamos un <strong>déficit moderado del 20%</strong> (~' + deficitAbs + ' kcal/día menos). ' +
@@ -1368,7 +1517,7 @@ document.getElementById('next-5').addEventListener('click', function() {
             'Déficits más agresivos aumentan la pérdida de músculo y reducen la adherencia.';
     } else if (userGoal === 'recomp') {
         document.getElementById('ob-goal-label').textContent = '🔄 Recomendado';
-        document.getElementById('ob-rec-sub').textContent = 'kcal/día · Déficit mínimo ~5%';
+        document.getElementById('ob-rec-sub').textContent = 'kcal/día · Déficit mínimo ~5%' + deadlineLabel;
         document.getElementById('ob-explanation').innerHTML =
             'La <strong>recomposición corporal</strong> busca ganar músculo y perder grasa a la vez. ' +
             'Se consigue con un <strong>déficit mínimo (~5%)</strong>, alta proteína (1.6-2.2g/kg) y entrenamiento de fuerza. ' +
@@ -1376,7 +1525,8 @@ document.getElementById('next-5').addEventListener('click', function() {
             '<em>(<a href="https://doi.org/10.1519/SSC.0000000000000584" target="_blank" rel="noopener noreferrer">Barakat et al., 2020</a>)</em>. Es un proceso más lento que bulk+cut pero mejora la composición corporal sin fases extremas.';
     } else if (userGoal === 'bulk') {
         document.getElementById('ob-goal-label').textContent = '💪 Recomendado';
-        document.getElementById('ob-rec-sub').textContent = 'kcal/día · Superávit del ~15%';
+        var surPct = Math.round(surplusAbs / userTdee * 100);
+        document.getElementById('ob-rec-sub').textContent = 'kcal/día · Superávit del ~' + surPct + '%' + deadlineLabel;
         document.getElementById('ob-explanation').innerHTML =
             'Para <strong>ganar masa muscular</strong> necesitas un <strong>superávit calórico</strong>: comer por encima de tu gasto. ' +
             'Te recomendamos un <strong>superávit moderado del 15%</strong> (~' + surplusAbs + ' kcal/día más). ' +
@@ -1384,7 +1534,7 @@ document.getElementById('next-5').addEventListener('click', function() {
             '<em>(<a href="https://pubmed.ncbi.nlm.nih.gov/31482093/" target="_blank" rel="noopener noreferrer">Slater et al., 2019</a>)</em>. Superávits excesivos no aceleran la ganancia muscular, solo acumulan más grasa.';
     } else {
         document.getElementById('ob-goal-label').textContent = '⚖️ Recomendado';
-        document.getElementById('ob-rec-sub').textContent = 'kcal/día · Mantenimiento';
+        document.getElementById('ob-rec-sub').textContent = 'kcal/día · Mantenimiento' + deadlineLabel;
         document.getElementById('ob-explanation').innerHTML =
             'Para <strong>mantener tu peso</strong>, come a tu nivel de gasto calórico (TDEE). ' +
             'Tu composición corporal se mantendrá estable. Si entrenas con intensidad suficiente, ' +
@@ -1653,9 +1803,17 @@ document.getElementById('reconfigure-btn').addEventListener('click', function() 
     var alcoholHint = document.getElementById('alcohol-hint');
     if (alcoholHint) alcoholHint.textContent = '';
 
-    // Step 5: goal
+    // Step 5: goal + path
     document.querySelectorAll('.goal-card.selected').forEach(function(el) { el.classList.remove('selected'); });
+    document.querySelectorAll('.path-card.selected').forEach(function(el) { el.classList.remove('selected'); });
     userGoal = '';
+    userPath = null;
+    deadlineWeeks = null;
+    document.getElementById('guided-mode').style.display = 'none';
+    document.getElementById('deadline-mode').style.display = 'none';
+    document.getElementById('deadline-fields').style.display = 'none';
+    document.getElementById('deadline-weeks').value = '';
+    document.getElementById('deadline-summary').innerHTML = '';
     document.getElementById('next-5').classList.add('disabled');
 
     // Clear all meal selections (breakfast, lunch, dinner)
@@ -2608,6 +2766,8 @@ function saveAllState() {
             goal: userGoal,
             tdee: userTdee,
             name: userName,
+            path: userPath,
+            deadlineWeeks: deadlineWeeks,
             selections: selections,
             calc: calcData
         }));
@@ -2628,6 +2788,8 @@ function loadState() {
         userGoal = data.goal;
         userTdee = data.tdee;
         userName = data.name || '';
+        userPath = data.path || 'guided';
+        deadlineWeeks = data.deadlineWeeks || null;
         if (userName) {
             var nameEl = document.getElementById('calc-name');
             if (nameEl) nameEl.value = userName;

@@ -270,30 +270,94 @@
             <!-- STEP 5: Objetivo -->
             <div class="onboarding-step" id="step-5">
                 <h2 class="step-title">5. Tu objetivo</h2>
-                <p class="step-desc">¿Qué quieres conseguir con tu alimentación?</p>
-                <p class="goal-recommendation" id="goal-recommendation" style="display:none;"></p>
-                <div class="goal-cards" id="goal-cards">
-                    <div class="goal-card" data-goal="cut">
-                        <span class="goal-icon">🔥</span>
-                        <strong>Perder grasa</strong>
-                        <span class="goal-desc">Déficit calórico moderado para reducir % grasa corporal</span>
+                <p class="step-desc">¿Cómo quieres enfocar tu plan?</p>
+
+                <!-- Path selector -->
+                <div class="path-selector" id="path-selector">
+                    <div class="path-card" data-path="deadline">
+                        <span class="path-icon">🎯</span>
+                        <strong>Tengo un objetivo con fecha</strong>
+                        <span class="path-desc">Quiero resultados para una fecha concreta</span>
                     </div>
-                    <div class="goal-card" data-goal="recomp">
-                        <span class="goal-icon">🔄</span>
-                        <strong>Recomposición corporal</strong>
-                        <span class="goal-desc">Ganar músculo y perder grasa a la vez con déficit mínimo y alta proteína</span>
-                    </div>
-                    <div class="goal-card" data-goal="maintain">
-                        <span class="goal-icon">⚖️</span>
-                        <strong>Mantener peso</strong>
-                        <span class="goal-desc">Comer a mantenimiento manteniendo tu composición actual</span>
-                    </div>
-                    <div class="goal-card" data-goal="bulk">
-                        <span class="goal-icon">💪</span>
-                        <strong>Ganar masa muscular</strong>
-                        <span class="goal-desc">Superávit calórico controlado para ganar músculo</span>
+                    <div class="path-card" data-path="guided">
+                        <span class="path-icon">🧭</span>
+                        <strong>Guíame tú</strong>
+                        <span class="path-desc">Recomiéndame lo mejor según mis datos</span>
                     </div>
                 </div>
+
+                <!-- Guided mode -->
+                <div id="guided-mode" style="display:none">
+                    <p class="goal-recommendation" id="goal-recommendation" style="display:none;"></p>
+                    <div class="goal-cards" id="goal-cards">
+                        <div class="goal-card" data-goal="cut">
+                            <span class="goal-icon">🔥</span>
+                            <strong>Perder grasa</strong>
+                            <span class="goal-desc">Déficit calórico moderado para reducir % grasa corporal</span>
+                        </div>
+                        <div class="goal-card" data-goal="recomp">
+                            <span class="goal-icon">🔄</span>
+                            <strong>Recomposición corporal</strong>
+                            <span class="goal-desc">Ganar músculo y perder grasa a la vez con déficit mínimo y alta proteína</span>
+                        </div>
+                        <div class="goal-card" data-goal="maintain">
+                            <span class="goal-icon">⚖️</span>
+                            <strong>Mantener peso</strong>
+                            <span class="goal-desc">Comer a mantenimiento manteniendo tu composición actual</span>
+                        </div>
+                        <div class="goal-card" data-goal="bulk">
+                            <span class="goal-icon">💪</span>
+                            <strong>Ganar masa muscular</strong>
+                            <span class="goal-desc">Superávit calórico controlado para ganar músculo</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Deadline mode -->
+                <div id="deadline-mode" style="display:none">
+                    <div class="goal-cards" id="deadline-goal-cards">
+                        <div class="goal-card" data-goal="cut">
+                            <span class="goal-icon">🔥</span>
+                            <strong>Perder grasa</strong>
+                            <span class="goal-desc">Definición y pérdida de grasa</span>
+                        </div>
+                        <div class="goal-card" data-goal="recomp">
+                            <span class="goal-icon">🔄</span>
+                            <strong>Recomposición</strong>
+                            <span class="goal-desc">Más músculo, menos grasa</span>
+                        </div>
+                        <div class="goal-card" data-goal="maintain">
+                            <span class="goal-icon">⚖️</span>
+                            <strong>Mantener</strong>
+                            <span class="goal-desc">Mantener composición actual</span>
+                        </div>
+                        <div class="goal-card" data-goal="bulk">
+                            <span class="goal-icon">💪</span>
+                            <strong>Ganar músculo</strong>
+                            <span class="goal-desc">Maximizar masa muscular</span>
+                        </div>
+                    </div>
+                    <div class="deadline-fields" id="deadline-fields" style="display:none">
+                        <div class="calc-form">
+                            <div class="calc-row">
+                                <div class="calc-field full-width">
+                                    <label for="deadline-weeks">¿En cuánto tiempo quieres conseguirlo?</label>
+                                    <select id="deadline-weeks">
+                                        <option value="">-- Selecciona plazo --</option>
+                                        <option value="4">4 semanas (1 mes)</option>
+                                        <option value="8">8 semanas (2 meses)</option>
+                                        <option value="12">12 semanas (3 meses)</option>
+                                        <option value="16">16 semanas (4 meses)</option>
+                                        <option value="20">20 semanas (5 meses)</option>
+                                        <option value="24">24 semanas (6 meses)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="deadline-summary" id="deadline-summary"></div>
+                    </div>
+                </div>
+
                 <div class="step-buttons">
                     <button class="onboarding-back" id="back-5">← Atrás</button>
                     <button class="onboarding-next disabled" id="next-5">Ver mi plan →</button>
