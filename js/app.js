@@ -3502,8 +3502,18 @@ function renderTrainerContent() {
     html += '</div>'; // end dinner panel
 
     // Alimentos adicionales (siempre visible, fuera de tabs)
-    html += '<div class="trainer-section"><h3>\ud83c\udf7d\ufe0f Alimentos adicionales</h3>';
-    html += '<p class="trainer-extras-desc">Añade alimentos extra para cuadrar macros en días fuera de rutina.</p>';
+    var extrasOpen = trainerExtraFoods.length > 0 ? ' open' : '';
+    var extrasOpenClass = trainerExtraFoods.length > 0 ? ' extras-open' : '';
+    html += '<div class="trainer-section trainer-extras-section' + extrasOpenClass + '">';
+    html += '<div class="trainer-extras-toggle" id="trainer-extras-toggle">';
+    html += '<span class="trainer-extras-toggle-icon">🍽️</span>';
+    html += '<span class="trainer-extras-toggle-text">¿Has comido algún alimento adicional?</span>';
+    if (trainerExtraFoods.length > 0) {
+        html += '<span class="trainer-extras-badge">' + trainerExtraFoods.length + '</span>';
+    }
+    html += '<span class="trainer-extras-chevron">▾</span>';
+    html += '</div>';
+    html += '<div class="trainer-extras-body' + extrasOpen + '" id="trainer-extras-body">';
     html += '<div class="trainer-extra-form">';
     html += '<select class="trainer-extra-select" id="trainer-extra-food">';
     var lastCat = '';
@@ -3539,7 +3549,8 @@ function renderTrainerContent() {
         });
         html += '</div>';
     }
-    html += '</div>';
+    html += '</div>'; // end body
+    html += '</div>'; // end section
 
     // Suplementos (siempre visible, fuera de tabs)
     html += '<div class="trainer-section"><h3>\ud83d\udc8a Suplementación</h3><div class="trainer-supps">';
@@ -3556,6 +3567,25 @@ function renderTrainerContent() {
     renderTrainerNutrition();
     renderTrainerDietSummary();
     renderTrainerValidator();
+    setupTrainerTabsVisibility();
+}
+
+var trainerTabsObserver = null;
+function setupTrainerTabsVisibility() {
+    if (trainerTabsObserver) trainerTabsObserver.disconnect();
+    var extrasSection = document.querySelector('.trainer-extras-section');
+    var tabsNav = document.querySelector('.trainer-tabs-nav');
+    if (!extrasSection || !tabsNav) return;
+    trainerTabsObserver = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+            if (entry.isIntersecting) {
+                tabsNav.classList.add('tabs-hidden');
+            } else {
+                tabsNav.classList.remove('tabs-hidden');
+            }
+        });
+    }, { threshold: 0 });
+    trainerTabsObserver.observe(extrasSection);
 }
 
 function renderTrainerValidator() {
@@ -3648,6 +3678,16 @@ document.getElementById('trainer-mode').addEventListener('touchmove', function(e
 document.addEventListener('click', function(e) {
     // Skip if this was a scroll gesture on mobile
     if (trainerTouchMoved) { trainerTouchMoved = false; return; }
+
+    // Toggle extras collapsible
+    var toggle = e.target.closest('#trainer-extras-toggle');
+    if (toggle) {
+        var body = document.getElementById('trainer-extras-body');
+        var section = toggle.closest('.trainer-extras-section');
+        if (body) body.classList.toggle('open');
+        if (section) section.classList.toggle('extras-open');
+        return;
+    }
 
     // Extra foods: add button
     if (e.target.id === 'trainer-extra-add' || e.target.closest('#trainer-extra-add')) {
