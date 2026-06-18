@@ -806,6 +806,7 @@ function validateStep1() {
 
 // Age warnings
 document.getElementById('calc-age').addEventListener('input', function() {
+    if (this.value.length > 3) this.value = this.value.slice(0, 3);
     var hint = document.getElementById('age-hint');
     var val = parseInt(this.value);
     if (val && val > 0 && val < 18) {
