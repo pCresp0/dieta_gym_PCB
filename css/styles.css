@@ -2889,11 +2889,11 @@ body {
     }
 
     .reconfigure-btn {
-        left: 56px;
-        height: 32px;
-        font-size: 0.72rem;
+        position: static;
+        margin: 0 auto 8px;
+        height: 30px;
+        font-size: 0.7rem;
         padding: 0 10px;
-        top: 12px;
     }
 
     .header-content {

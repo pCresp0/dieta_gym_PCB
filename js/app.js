@@ -1395,11 +1395,11 @@ document.getElementById('reconfigure-btn').addEventListener('click', function() 
     document.querySelectorAll('.goal-card.selected').forEach(function(el) { el.classList.remove('selected'); });
     userGoal = '';
 
-    // Show onboarding at step 2 (since basic data is kept)
+    // Show onboarding at step 1
     document.getElementById('app-wrapper').style.display = 'none';
     document.getElementById('onboarding').style.display = '';
     document.getElementById('selection-validator').classList.add('hidden');
-    showStep(2);
+    showStep(1);
 });
 
 // ============================================================
