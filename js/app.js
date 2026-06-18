@@ -901,6 +901,23 @@ function estimateBodyFatFromBMI() {
     var sex = document.getElementById('calc-sex').value;
     if (!h || !w || h < 100 || w < 30) return;
 
+    var muscEl = document.getElementById('calc-muscularity');
+    var muscVal = muscEl ? muscEl.value : '';
+    var expEl = document.getElementById('calc-experience');
+    var expVal = expEl ? expEl.value : '';
+
+    // Don't auto-estimate until experience and muscularity are filled
+    if (!muscVal || !expVal) {
+        // Clear any previous auto-suggestion
+        document.getElementById('calc-bf').value = '';
+        document.querySelectorAll('.silhouette-card').forEach(function(c) {
+            c.classList.remove('selected', 'suggested');
+        });
+        var hint = document.getElementById('silhouette-hint');
+        if (hint) hint.textContent = '';
+        return;
+    }
+
     var bmi = w / ((h / 100) * (h / 100));
     var sexFactor = sex === 'male' ? 1 : 0;
     // Deurenberg formula (age optional for estimate)
@@ -910,15 +927,11 @@ function estimateBodyFatFromBMI() {
     // Adjust for muscularity and training experience
     // BMI-based formulas overestimate BF% in muscular individuals by 3-5%
     // (Esco et al., 2015; Jackson et al., 2002; Piers et al., 2000)
-    var muscEl = document.getElementById('calc-muscularity');
-    var muscVal = muscEl ? muscEl.value : '';
     var muscAdj = 0;
     if (muscVal === 'low') muscAdj = 1.5;
     else if (muscVal === 'high') muscAdj = -3;
     else if (muscVal === 'very-high') muscAdj = -5;
 
-    var expEl = document.getElementById('calc-experience');
-    var expVal = expEl ? expEl.value : '';
     var expAdj = 0;
     if (expVal === 'intermediate') expAdj = -1;
     else if (expVal === 'advanced') expAdj = -2;
@@ -1464,6 +1477,9 @@ document.getElementById('reconfigure-btn').addEventListener('click', function() 
     // Step 1: silhouette, experience, muscularity, diet-history, appetite
     document.getElementById('calc-bf').value = '';
     document.querySelectorAll('.silhouette-option.selected').forEach(function(el) { el.classList.remove('selected'); });
+    document.querySelectorAll('.silhouette-card').forEach(function(c) { c.classList.remove('selected', 'suggested'); });
+    var silHint = document.getElementById('silhouette-hint');
+    if (silHint) silHint.textContent = '';
     document.getElementById('calc-experience').value = '';
     document.getElementById('calc-muscularity').value = '';
     document.getElementById('calc-diet-history').value = '';
