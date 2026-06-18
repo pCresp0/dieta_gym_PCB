@@ -1476,6 +1476,23 @@ function randomDiet() {
     }
 })();
 
+// How it works - collapsible
+(function() {
+    var section = document.getElementById('how-it-works');
+    var toggle = document.getElementById('how-it-works-toggle');
+    if (!section || !toggle) return;
+
+    // Restore collapsed state
+    if (localStorage.getItem('howItWorksCollapsed') === '1') {
+        section.classList.add('collapsed');
+    }
+
+    toggle.addEventListener('click', function() {
+        section.classList.toggle('collapsed');
+        localStorage.setItem('howItWorksCollapsed', section.classList.contains('collapsed') ? '1' : '0');
+    });
+})();
+
 // Info tooltip on mobile (long press OR info button tap to show, tap elsewhere to hide)
 (function() {
     var infoTimer = null;
