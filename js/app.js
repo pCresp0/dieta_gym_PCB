@@ -850,17 +850,14 @@ function estimateBodyFatFromBMI() {
     var h = parseFloat(document.getElementById('calc-height').value);
     var w = parseFloat(document.getElementById('calc-weight').value);
     var sex = document.getElementById('calc-sex').value;
-    if (!age || !h || !w || age < 18 || h < 100 || w < 30) return;
+    if (!h || !w || h < 100 || w < 30) return;
 
     var bmi = w / ((h / 100) * (h / 100));
     var sexFactor = sex === 'male' ? 1 : 0;
-    // Deurenberg formula
-    var estimatedBf = (1.20 * bmi) + (0.23 * age) - (10.8 * sexFactor) - 5.4;
+    // Deurenberg formula (age optional for estimate)
+    var ageVal = (age && age >= 18) ? age : 25;
+    var estimatedBf = (1.20 * bmi) + (0.23 * ageVal) - (10.8 * sexFactor) - 5.4;
     estimatedBf = Math.max(5, Math.min(50, estimatedBf));
-
-    // Only auto-suggest if user hasn't manually chosen one
-    var currentBf = document.getElementById('calc-bf').value;
-    if (currentBf) return; // user already picked one
 
     // Find closest silhouette
     var data = silhouetteData[sex] || silhouetteData.male;
@@ -871,7 +868,7 @@ function estimateBodyFatFromBMI() {
         if (dist < minDist) { minDist = dist; closest = data[i]; }
     }
 
-    // Pre-select with suggestion styling
+    // Auto-select the estimated silhouette
     document.getElementById('calc-bf').value = closest.bf;
     document.querySelectorAll('.silhouette-card').forEach(function(c) {
         c.classList.remove('selected', 'suggested');
