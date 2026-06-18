@@ -70,7 +70,7 @@ var breakfastOptions = [
     { id:'bocadillo', name:'Bocadillo de pollo/pavo y queso/guacamole', macros:[520,38,55,16],
       items:[{text:'Pan integral trigo/espelta/centeno',amount:120,unit:'g'},{text:'Pollo / Pavo',amount:100,unit:'g'},{text:'Queso',amount:60,unit:'g',extra:'ó {80}g guacamole',extraBase:80}]},
     { id:'batido-proteinas', name:'Batido de avena y proteínas', macros:[540,37,50,21],
-      items:[{text:'Corn flakes / copos de avena / cereales sin azúcar',amount:45,unit:'g'},{text:'Leche semidesnatada (un vaso)',amount:200,unit:'ml'},{text:'Whey protein',amount:35,unit:'g',extra:'(+{10}g extra)',extraBase:10},{text:'Aceite de oliva (sustituto frutos secos)',amount:15,unit:'ml'}]}
+      items:[{text:'Corn flakes / copos de avena / cereales sin azúcar',amount:45,unit:'g'},{text:'Leche semidesnatada (un vaso)',amount:200,unit:'ml'},{text:'Whey protein',amount:35,unit:'g'},{text:'Aceite de oliva (sustituto frutos secos)',amount:15,unit:'ml',spoonHint:true}]}
 ];
 
 var lunchCarbs = [
@@ -335,6 +335,20 @@ function scaleAmount(base, ratio) {
     return scaled < 10 ? Math.round(scaled) : Math.round(scaled / 5) * 5;
 }
 
+// Spoon equivalence for olive oil (ml)
+// ~5ml = cucharada de postre rasa, ~10ml = cucharada sopera rasa, ~15ml = cucharada sopera colmada
+function oilSpoonHint(ml) {
+    if (ml <= 3) return '(menos de una cucharadita)';
+    if (ml <= 5) return '(~1 cucharadita)';
+    if (ml <= 8) return '(~1 cucharada de postre)';
+    if (ml <= 10) return '(~1 cucharada sopera rasa)';
+    if (ml <= 15) return '(~1 cucharada sopera)';
+    if (ml <= 20) return '(~1½ cucharadas soperas)';
+    if (ml <= 25) return '(~2 cucharadas soperas)';
+    if (ml <= 30) return '(~2 cucharadas soperas)';
+    return '(~' + Math.round(ml / 15) + ' cucharadas soperas)';
+}
+
 // ============================================================
 // BMR / TDEE
 // ============================================================
@@ -464,8 +478,10 @@ function renderBreakfast() {
         var items = opt.items.map(function(it) {
             var cls = it.isAlt ? ' class="alt-item"' : '';
             var c = it.text;
-            if (it.amount !== null) { c += ': <span class="amount">' + scaleAmount(it.amount,ratio) + it.unit + '</span>'; }
+            var scaledAmt = scaleAmount(it.amount, ratio);
+            if (it.amount !== null) { c += ': <span class="amount">' + scaledAmt + it.unit + '</span>'; }
             if (it.extra) { c += ' <span style="color:#999">' + it.extra.replace(/\{(\d+)\}/, scaleAmount(it.extraBase,ratio)) + '</span>'; }
+            if (it.spoonHint) { c += ' <span style="color:#999">' + oilSpoonHint(scaledAmt) + '</span>'; }
             return '<li' + cls + '>' + c + '</li>';
         }).join('');
         return '<div class="breakfast-card' + (sel?' selected':'') + '" data-index="'+idx+'"><div class="breakfast-card-title">'+opt.name+'</div><ul class="breakfast-card-items">'+items+'</ul></div>';
@@ -1985,6 +2001,7 @@ function buildWeeklyExportCanvas(plan) {
                 var extraText = item.extra.replace(/\{(\d+)\}/, extraScaled);
                 line += ' ' + extraText;
             }
+            if (item.spoonHint) { line += ' ' + oilSpoonHint(scaled); }
             ctx.fillStyle = textLight;
             ctx.font = '15px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
             ctx.fillText(line, pad + 24, mealY);
@@ -2460,6 +2477,10 @@ function buildMealSummaryHTML(selObj, ratio, isTrainer) {
                 var extraScaled = isTrainer ? item.extraBase : scaleAmount(item.extraBase, carbR);
                 var extraText = item.extra.replace(/\{(\d+)\}/, extraScaled);
                 line += ' <span class="summary-extra">' + extraText + '</span>';
+            }
+            if (item.spoonHint) {
+                var hintAmt = isTrainer ? item.amount : scaleAmount(item.amount, carbR);
+                line += ' <span class="summary-extra">' + oilSpoonHint(hintAmt) + '</span>';
             }
             return line;
         });
@@ -3067,6 +3088,7 @@ function buildWhatsAppText() {
                 var extraText = item.extra.replace(/\{(\d+)\}/, extraScaled);
                 line += ' ' + extraText;
             }
+            if (item.spoonHint) { line += ' ' + oilSpoonHint(scaled); }
             return line;
         });
         var bkKcal = Math.round(opt.macros[0] * carbR);
@@ -3369,6 +3391,10 @@ function buildExportCanvas() {
                 var extraScaled = scaleAmount(it.extraBase, carbRatio);
                 var extraText = it.extra.replace(/\{(\d+)\}/, extraScaled);
                 name += '  ' + extraText;
+            }
+            if (it.spoonHint) {
+                var spAmt = it.amount !== null ? scaleAmount(it.amount, carbRatio) : 0;
+                name += '  ' + oilSpoonHint(spAmt);
             }
             return { name: name, amount: amt };
         });
