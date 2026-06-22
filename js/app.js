@@ -3370,9 +3370,28 @@ var TRAINER_PROFILE = {
     training: {
         daysPerWeek: 4,
         typicalSessionMin: 90, // base fija para las 4 sesiones/semana (kcal, no editable)
+        avgBarSideKg: 22.5, // peso medio anotado por lado en Jefit (ej. 20–25 kg)
+        smithBarKg: 20,
+        barbellKg: 20,
         typicalGymDays: [1, 3, 5, 6], // lun, mié, vie, sáb (puede cambiar)
         dayWorkoutMap: { 1: 'torso-1', 3: 'pierna-1', 5: 'torso-2', 6: 'pierna-2' }
     }
+};
+
+// Jefit (Pablo): en barra/Smith anota solo un lado → carga real ≈ lado×2 + barra
+var TRAINER_EXERCISE_LOAD = {
+    'Press inclinado Smith': { kind: 'bar_per_side', barKg: 20 },
+    'Press militar': { kind: 'bar_per_side', barKg: 20 },
+    'Remo barra': { kind: 'bar_per_side', barKg: 20 },
+    'Curl barra': { kind: 'bar_per_side', barKg: 20 },
+    'Peso muerto rumano': { kind: 'bar_per_side', barKg: 20 },
+    'Hip thrust': { kind: 'bar_per_side', barKg: 20 },
+    'Búlgaras Smith': { kind: 'bar_per_side', barKg: 20 },
+    'Hack squat': { kind: 'bar_per_side', barKg: 20 },
+    'Press mancuernas': { kind: 'dumbbell_pair' },
+    'Zancadas mancuernas': { kind: 'dumbbell_pair' },
+    'Curl alterno': { kind: 'dumbbell_pair' },
+    'Elevaciones laterales': { kind: 'dumbbell_pair' }
 };
 
 // Rutinas reales de Jefit (Pablo) — 90 min fuerza; cardio vía pasos del día
@@ -3480,17 +3499,46 @@ function getDefaultWorkoutForDay(d) {
     return id || null;
 }
 
+function getExerciseLoadRule(exerciseName) {
+    return TRAINER_EXERCISE_LOAD[exerciseName] || { kind: 'full' };
+}
+
+function getLoadVolumeMultiplier(rule, avgSideKg) {
+    if (rule.kind === 'bar_per_side') {
+        var bar = rule.barKg != null ? rule.barKg : (TRAINER_PROFILE.training.smithBarKg || 20);
+        return (2 * avgSideKg + bar) / avgSideKg;
+    }
+    if (rule.kind === 'dumbbell_pair') return 2;
+    return 1;
+}
+
+function getWorkoutVolumeCorrectionFactor(workout) {
+    var exercises = workout.exercises;
+    if (!exercises || !exercises.length) return 1;
+    var avgSide = TRAINER_PROFILE.training.avgBarSideKg || 22.5;
+    var totalMult = 0;
+    for (var i = 0; i < exercises.length; i++) {
+        totalMult += getLoadVolumeMultiplier(getExerciseLoadRule(exercises[i]), avgSide);
+    }
+    return totalMult / exercises.length;
+}
+
+function getCorrectedWorkoutVolumeKg(workout) {
+    return Math.round(workout.volumeKg * getWorkoutVolumeCorrectionFactor(workout));
+}
+
 function calculateWorkoutKcalBreakdown(workout, weight) {
     weight = weight || TRAINER_PROFILE.weight;
     var wFactor = weight / 70;
     var isLeg = !!workout.isLeg;
     var sessionMin = getTrainerSessionMin();
+    var volumeKg = getCorrectedWorkoutVolumeKg(workout);
     // Sesión completa (incl. descansos): Jefit marca pocos min "activos" en pierna por pausas largas
     var sessionMet = isLeg ? 5.2 : 4.5;
     var sessionKcal = sessionMet * weight * (sessionMin / 60);
     var intensityKcal = 2.5 * weight * (workout.actualWorkMin / 60);
     var volCoef = isLeg ? 0.019 : 0.014;
-    var volumeKcal = workout.volumeKg * volCoef * wFactor;
+    var volumeKcal = volumeKg * volCoef * wFactor;
     var epocMult = isLeg ? 1.18 : 1.0;
     var strengthBase = sessionKcal + intensityKcal + volumeKcal;
     var strengthTotal = strengthBase * epocMult;
@@ -3499,6 +3547,7 @@ function calculateWorkoutKcalBreakdown(workout, weight) {
         session: Math.round(sessionKcal),
         intensity: Math.round(intensityKcal),
         volume: Math.round(volumeKcal),
+        volumeKg: volumeKg,
         epoc: Math.round(epocKcal),
         total: Math.round(strengthTotal),
         isLeg: isLeg
@@ -3867,12 +3916,11 @@ function updateTrainerEnergyUI() {
     var trainRows = '';
     if (r.trainDetail) {
         var bd = r.trainDetail.breakdown;
-        var w = getTrainerWorkoutById(r.trainDetail.id);
         trainRows += '<div class="trainer-tdee-row"><span>🏋️ ' + r.trainDetail.name + '</span><strong>+' + r.trainKcal + ' kcal</strong></div>';
         trainRows += '<div class="trainer-tdee-sub">' +
-            '<span>Pesas (sesión completa)</span><span>+' + bd.session + ' kcal</span>' +
-            '<span>Series bajo carga</span><span>+' + bd.intensity + ' kcal</span>' +
-            '<span>Volumen (' + Math.round(w.volumeKg).toLocaleString('es-ES') + ' kg)</span><span>+' + bd.volume + ' kcal</span>' +
+            '<span>Sesión en gym (90 min)</span><span>+' + bd.session + ' kcal</span>' +
+            '<span>Minutos activos levantando</span><span>+' + bd.intensity + ' kcal</span>' +
+            '<span>Volumen total (' + Math.round(bd.volumeKg).toLocaleString('es-ES') + ' kg)</span><span>+' + bd.volume + ' kcal</span>' +
             (bd.epoc ? '<span>EPOC pierna (grupos grandes)</span><span>+' + bd.epoc + ' kcal</span>' : '') +
         '</div>';
     } else {
