@@ -3426,7 +3426,6 @@ var TRAINER_WORKOUTS = [
 var trainerDailyLog = {
     date: '',
     steps: null,
-    watchActiveKcal: null,
     plannedWorkoutId: null,
     workoutStatus: null, // done | skipped | rest | other
     workoutId: null
@@ -3579,7 +3578,6 @@ function ensureTrainerDailyLog() {
         trainerDailyLog = {
             date: today,
             steps: null,
-            watchActiveKcal: null,
             plannedWorkoutId: planned,
             workoutStatus: gymDay ? 'done' : 'rest',
             workoutId: gymDay ? planned : null
@@ -3620,7 +3618,7 @@ function calculateTrainerBMR() {
         : (10 * p.weight) + (6.25 * p.height) - (5 * p.age) - 161;
 }
 
-function calculateTrainerTDEE(steps, workoutId, watchActiveKcal) {
+function calculateTrainerTDEE(steps, workoutId) {
     var bmr = calculateTrainerBMR();
     var office = getOfficeNeatKcal();
     var stepsKcal = Math.round(calculateStepsKcal(steps));
@@ -3637,23 +3635,13 @@ function calculateTrainerTDEE(steps, workoutId, watchActiveKcal) {
             };
         }
     }
-    var watchKcal = watchActiveKcal > 0 ? Math.round(watchActiveKcal) : 0;
-    // Ambiente: oficina + pasos. El Apple Watch suele quedarse corto en gym de fuerza → gym aparte
-    var ambientKcal = office.kcal + stepsKcal;
-    var usedWatch = false;
-    if (watchKcal > ambientKcal) {
-        ambientKcal = watchKcal;
-        usedWatch = true;
-    }
-    var activeKcal = ambientKcal + trainExtra;
+    var activeKcal = office.kcal + stepsKcal + trainExtra;
     return {
         bmr: Math.round(bmr),
         officeKcal: office.kcal,
         officeLabel: office.label,
         officeComplete: office.complete,
         stepsKcal: stepsKcal,
-        watchKcal: watchKcal || null,
-        watchUsed: usedWatch,
         trainKcal: Math.round(trainExtra),
         trainDetail: trainDetail,
         activeKcal: Math.round(activeKcal),
@@ -3676,8 +3664,7 @@ function getTrainerEnergySummary() {
     ensureTrainerDailyLog();
     var result = calculateTrainerTDEE(
         trainerDailyLog.steps,
-        getActiveWorkoutId(),
-        trainerDailyLog.watchActiveKcal
+        getActiveWorkoutId()
     );
     var targetKcal = Math.round(result.tdee * getTrainerGoalMultiplier());
     return { result: result, targetKcal: targetKcal };
@@ -3853,7 +3840,6 @@ function renderTrainerActivityPanel() {
 
     ensureTrainerDailyLog();
     var stepsVal = trainerDailyLog.steps !== null ? trainerDailyLog.steps : '';
-    var watchVal = trainerDailyLog.watchActiveKcal !== null ? trainerDailyLog.watchActiveKcal : '';
 
     container.innerHTML =
         renderTrainerWorkoutDaySection() +
@@ -3867,10 +3853,6 @@ function renderTrainerActivityPanel() {
                 '<div class="trainer-activity-field">' +
                     '<label for="trainer-steps-today">Pasos de hoy <span class="trainer-activity-hint">(Apple Health · hasta ahora)</span></label>' +
                     '<input type="number" id="trainer-steps-today" value="' + stepsVal + '" placeholder="Ej: 10000" min="0" max="50000" step="100">' +
-                '</div>' +
-                '<div class="trainer-activity-field">' +
-                    '<label for="trainer-watch-kcal">Kcal activas Apple Watch <span class="trainer-activity-hint">(opcional · Movimiento)</span></label>' +
-                    '<input type="number" id="trainer-watch-kcal" value="' + watchVal + '" placeholder="Ej: 403" min="0" max="5000" step="1">' +
                 '</div>' +
             '</div>' +
             '<div class="trainer-tdee-breakdown" id="trainer-tdee-breakdown"></div>' +
@@ -3891,7 +3873,6 @@ function updateTrainerEnergyUI() {
     var energy = getTrainerEnergySummary();
     var r = energy.result;
     var hasSteps = trainerDailyLog.steps !== null && trainerDailyLog.steps > 0;
-    var hasWatch = trainerDailyLog.watchActiveKcal !== null && trainerDailyLog.watchActiveKcal > 0;
 
     if (dateEl) {
         dateEl.textContent = getTrainerTimeLabel();
@@ -3917,13 +3898,6 @@ function updateTrainerEnergyUI() {
         trainRows += '<div class="trainer-tdee-row trainer-tdee-muted"><span>🏋️ Gym hoy</span><strong>—</strong></div>';
     }
 
-    var watchNote = '';
-    if (hasWatch && r.trainKcal > 0 && r.watchKcal < r.stepsKcal + r.officeKcal + r.trainKcal * 0.4) {
-        watchNote = '<div class="trainer-tdee-row trainer-tdee-watch-note"><span>⌚ Apple Watch (' + r.watchKcal + ' kcal activas)</span><span>Suele quedarse corto en fuerza — sumamos gym aparte</span></div>';
-    } else if (hasWatch && r.watchUsed) {
-        watchNote = '<div class="trainer-tdee-row trainer-tdee-watch-note"><span>⌚ Apple Watch</span><span>+' + r.watchKcal + ' kcal (mayor que oficina+pasos)</span></div>';
-    }
-
     breakdown.innerHTML =
         '<div class="trainer-tdee-row"><span>🔥 Metabolismo basal</span><strong>' + r.bmr + ' kcal</strong></div>' +
         '<div class="trainer-tdee-row"><span>🪑 ' + r.officeLabel + '</span><strong>+' + r.officeKcal + ' kcal</strong></div>' +
@@ -3931,17 +3905,18 @@ function updateTrainerEnergyUI() {
             ? '<div class="trainer-tdee-row"><span>👟 Pasos (' + trainerDailyLog.steps.toLocaleString('es-ES') + ' hasta ahora)</span><strong>+' + r.stepsKcal + ' kcal</strong></div>'
             : '<div class="trainer-tdee-row trainer-tdee-muted"><span>👟 Pasos</span><strong>—</strong></div>') +
         trainRows +
-        watchNote +
         '<div class="trainer-tdee-row trainer-tdee-active"><span>= Actividad total (sin BMR)</span><strong>+' + r.activeKcal + ' kcal</strong></div>' +
         '<div class="trainer-tdee-row trainer-tdee-total"><span>= TDEE de hoy</span><strong>' + r.tdee + ' kcal</strong></div>' +
         '<div class="trainer-tdee-row trainer-tdee-target"><span>🎯 Objetivo ' + getTrainerGoalLabel().toLowerCase() + ' (×' + getTrainerGoalMultiplier() + ')</span><strong>' + energy.targetKcal + ' kcal</strong></div>';
 
     if (note) {
-        var noteParts = [];
-        if (!hasSteps) noteParts.push('Introduce los pasos actuales del iPhone (oficina normal: ~10.000 al cerrar el día).');
-        if (!hasWatch) noteParts.push('Si tienes Apple Watch, mete las kcal activas de Movimiento para contrastar.');
-        note.textContent = noteParts.join(' ');
-        note.style.display = noteParts.length ? '' : 'none';
+        if (!hasSteps) {
+            note.textContent = 'Introduce los pasos actuales del iPhone (oficina normal: ~10.000 al cerrar el día).';
+            note.style.display = '';
+        } else {
+            note.textContent = '';
+            note.style.display = 'none';
+        }
     }
 
     updateTrainerWorkoutDayUI();
@@ -4514,15 +4489,6 @@ document.getElementById('trainer-activity-panel').addEventListener('input', func
         var v = e.target.value.trim();
         trainerDailyLog.steps = v ? parseInt(v, 10) : null;
         if (trainerDailyLog.steps !== null && isNaN(trainerDailyLog.steps)) trainerDailyLog.steps = null;
-        trainerDailyLog.date = getTodayDateKey();
-        saveTrainerPersonalState();
-        updateTrainerEnergyUI();
-        renderTrainerNutrition();
-    }
-    if (e.target.id === 'trainer-watch-kcal') {
-        var wv = e.target.value.trim();
-        trainerDailyLog.watchActiveKcal = wv ? parseInt(wv, 10) : null;
-        if (trainerDailyLog.watchActiveKcal !== null && isNaN(trainerDailyLog.watchActiveKcal)) trainerDailyLog.watchActiveKcal = null;
         trainerDailyLog.date = getTodayDateKey();
         saveTrainerPersonalState();
         updateTrainerEnergyUI();

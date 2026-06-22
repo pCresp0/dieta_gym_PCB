@@ -4616,19 +4616,6 @@ body.site-gate-active {
     color: var(--text-primary);
 }
 
-.trainer-tdee-row.trainer-tdee-watch-note {
-    font-size: 0.68rem;
-    font-style: italic;
-    color: var(--text-muted);
-    padding: 4px 0;
-}
-
-.trainer-tdee-row.trainer-tdee-watch-note strong,
-.trainer-tdee-row.trainer-tdee-watch-note span:last-child {
-    color: var(--text-muted);
-    font-weight: 500;
-}
-
 .trainer-activity-note {
     margin: 10px 0 0;
     font-size: 0.72rem;
