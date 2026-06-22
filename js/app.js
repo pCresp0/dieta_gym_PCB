@@ -3375,7 +3375,7 @@ var TRAINER_PROFILE = {
     }
 };
 
-// Rutinas reales de Jefit (Pablo) — volumen, bici y kcal sobre sesión fija de 90 min
+// Rutinas reales de Jefit (Pablo) — 90 min fuerza; cardio vía pasos del día
 var TRAINER_WORKOUTS = [
     {
         id: 'torso-1',
@@ -3383,8 +3383,6 @@ var TRAINER_WORKOUTS = [
         emoji: '💪',
         actualWorkMin: 61,
         volumeKg: 11102,
-        cardioMin: 30,
-        cardioLabel: 'Bici reclinada',
         exercises: ['Press inclinado Smith', 'Jalón un brazo', 'Press mancuernas', 'Jalón ancho', 'Curl barra', 'Extensión tríceps', 'Curl alterno', 'Pushdown cuerda']
     },
     {
@@ -3394,7 +3392,6 @@ var TRAINER_WORKOUTS = [
         isLeg: true,
         actualWorkMin: 27,
         volumeKg: 7350,
-        cardioMin: 0,
         exercises: ['Crunch polea', 'Aducción cadera', 'Hack squat', 'Búlgaras Smith', 'Gemelos sentado', 'Zancadas mancuernas']
     },
     {
@@ -3403,8 +3400,6 @@ var TRAINER_WORKOUTS = [
         emoji: '🏋️',
         actualWorkMin: 45,
         volumeKg: 7381,
-        cardioMin: 30,
-        cardioLabel: 'Bici reclinada',
         exercises: ['Press militar', 'Peck deck', 'Remo barra', 'Pájaros', 'Elevaciones laterales', 'Curl alterno', 'Extensión tríceps un brazo']
     },
     {
@@ -3414,7 +3409,6 @@ var TRAINER_WORKOUTS = [
         isLeg: true,
         actualWorkMin: 17,
         volumeKg: 9995,
-        cardioMin: 0,
         exercises: ['Peso muerto rumano', 'Hip thrust', 'Prensa piernas', 'Extensión cuádriceps', 'Curl femoral', 'Crunch polea', 'Crunch declinado']
     }
 ];
@@ -3491,12 +3485,10 @@ function calculateWorkoutKcalBreakdown(workout, weight) {
     var wFactor = weight / 70;
     var isLeg = !!workout.isLeg;
     var sessionMin = getTrainerSessionMin();
-    var strengthMin = sessionMin - (workout.cardioMin || 0);
     // Sesión completa (incl. descansos): Jefit marca pocos min "activos" en pierna por pausas largas
     var sessionMet = isLeg ? 5.2 : 4.5;
-    var sessionKcal = sessionMet * weight * (strengthMin / 60);
+    var sessionKcal = sessionMet * weight * (sessionMin / 60);
     var intensityKcal = 2.5 * weight * (workout.actualWorkMin / 60);
-    var cardioKcal = workout.cardioMin ? (3.8 * weight * (workout.cardioMin / 60)) : 0;
     var volCoef = isLeg ? 0.019 : 0.014;
     var volumeKcal = workout.volumeKg * volCoef * wFactor;
     var epocMult = isLeg ? 1.18 : 1.0;
@@ -3506,10 +3498,9 @@ function calculateWorkoutKcalBreakdown(workout, weight) {
     return {
         session: Math.round(sessionKcal),
         intensity: Math.round(intensityKcal),
-        cardio: Math.round(cardioKcal),
         volume: Math.round(volumeKcal),
         epoc: Math.round(epocKcal),
-        total: Math.round(strengthTotal + cardioKcal),
+        total: Math.round(strengthTotal),
         isLeg: isLeg
     };
 }
@@ -3843,7 +3834,7 @@ function renderTrainerActivityPanel() {
             '<p class="trainer-activity-profile">81,5 kg · 174 cm · 32 años · oficina 9–19h · ~10.000 pasos/día · sin alcohol</p>' +
             '<div class="trainer-activity-inputs">' +
                 '<div class="trainer-activity-field">' +
-                    '<label for="trainer-steps-today">Pasos de hoy <span class="trainer-activity-hint">(Apple Health · hasta ahora)</span></label>' +
+                    '<label for="trainer-steps-today">Pasos de hoy <span class="trainer-activity-hint">(Apple Health · incluye cardio del día)</span></label>' +
                     '<input type="number" id="trainer-steps-today" value="' + stepsVal + '" placeholder="Ej: 10000" min="0" max="50000" step="100">' +
                 '</div>' +
             '</div>' +
@@ -3881,7 +3872,6 @@ function updateTrainerEnergyUI() {
         trainRows += '<div class="trainer-tdee-sub">' +
             '<span>Pesas (sesión completa)</span><span>+' + bd.session + ' kcal</span>' +
             '<span>Series bajo carga</span><span>+' + bd.intensity + ' kcal</span>' +
-            (bd.cardio ? '<span>' + (w.cardioLabel || 'Cardio') + '</span><span>+' + bd.cardio + ' kcal</span>' : '') +
             '<span>Volumen (' + Math.round(w.volumeKg).toLocaleString('es-ES') + ' kg)</span><span>+' + bd.volume + ' kcal</span>' +
             (bd.epoc ? '<span>EPOC pierna (grupos grandes)</span><span>+' + bd.epoc + ' kcal</span>' : '') +
         '</div>';
