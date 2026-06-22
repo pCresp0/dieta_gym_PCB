@@ -3886,7 +3886,7 @@ function renderTrainerActivityPanel() {
             '<p class="trainer-activity-profile">81,5 kg · 174 cm · 32 años · oficina 9–19h · ~10.000 pasos/día · sin alcohol</p>' +
             '<div class="trainer-activity-inputs">' +
                 '<div class="trainer-activity-field">' +
-                    '<label for="trainer-steps-today">Pasos de hoy <span class="trainer-activity-hint">(Apple Health · incluye cardio del día)</span></label>' +
+                    '<label for="trainer-steps-today">Pasos totales del día <span class="trainer-activity-hint">(estimación · incluye cardio)</span></label>' +
                     '<input type="number" id="trainer-steps-today" value="' + stepsVal + '" placeholder="Ej: 10000" min="0" max="50000" step="100">' +
                 '</div>' +
             '</div>' +
@@ -3934,8 +3934,8 @@ function updateTrainerEnergyUI() {
         '<div class="trainer-tdee-row"><span>🔥 Metabolismo basal</span><strong>' + r.bmr + ' kcal</strong></div>' +
         '<div class="trainer-tdee-row"><span>🪑 ' + r.officeLabel + '</span><strong>+' + r.officeKcal + ' kcal</strong></div>' +
         (hasSteps
-            ? '<div class="trainer-tdee-row"><span>👟 Pasos (' + trainerDailyLog.steps.toLocaleString('es-ES') + ' hasta ahora)</span><strong>+' + r.stepsKcal + ' kcal</strong></div>'
-            : '<div class="trainer-tdee-row trainer-tdee-muted"><span>👟 Pasos</span><strong>—</strong></div>') +
+            ? '<div class="trainer-tdee-row"><span>👟 Pasos del día (' + trainerDailyLog.steps.toLocaleString('es-ES') + ' total)</span><strong>+' + r.stepsKcal + ' kcal</strong></div>'
+            : '<div class="trainer-tdee-row trainer-tdee-muted"><span>👟 Pasos del día</span><strong>—</strong></div>') +
         trainRows +
         '<div class="trainer-tdee-row trainer-tdee-active"><span>= Actividad total (sin BMR)</span><strong>+' + r.activeKcal + ' kcal</strong></div>' +
         '<div class="trainer-tdee-row trainer-tdee-total"><span>= TDEE de hoy</span><strong>' + r.tdee + ' kcal</strong></div>' +
@@ -3943,7 +3943,7 @@ function updateTrainerEnergyUI() {
 
     if (note) {
         if (!hasSteps) {
-            note.textContent = 'Introduce los pasos actuales del iPhone (oficina normal: ~10.000 al cerrar el día).';
+            note.textContent = 'Introduce los pasos totales que harás hoy (oficina normal: ~10.000).';
             note.style.display = '';
         } else {
             note.textContent = '';
