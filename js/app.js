@@ -3369,23 +3369,22 @@ var TRAINER_PROFILE = {
     workEnd: 19,
     training: {
         daysPerWeek: 4,
-        typicalSessionMin: 90, // habitual en gym (pesas + bici en torso; hoy torso-1: 84 min)
+        typicalSessionMin: 90, // base fija para las 4 sesiones/semana (kcal, no editable)
         typicalGymDays: [1, 3, 5, 6], // lun, mié, vie, sáb (puede cambiar)
         dayWorkoutMap: { 1: 'torso-1', 3: 'pierna-1', 5: 'torso-2', 6: 'pierna-2' }
     }
 };
 
-// Rutinas reales de Jefit (Pablo) — ~90 min habituales por sesión
+// Rutinas reales de Jefit (Pablo) — volumen, bici y kcal sobre sesión fija de 90 min
 var TRAINER_WORKOUTS = [
     {
         id: 'torso-1',
         name: 'Torso 1',
         emoji: '💪',
-        totalMin: 90,
         actualWorkMin: 61,
         volumeKg: 11102,
         cardioMin: 30,
-        cardioLabel: 'Bici reclinada 30 min',
+        cardioLabel: 'Bici reclinada',
         exercises: ['Press inclinado Smith', 'Jalón un brazo', 'Press mancuernas', 'Jalón ancho', 'Curl barra', 'Extensión tríceps', 'Curl alterno', 'Pushdown cuerda']
     },
     {
@@ -3393,7 +3392,6 @@ var TRAINER_WORKOUTS = [
         name: 'Pierna 1',
         emoji: '🦵',
         isLeg: true,
-        totalMin: 90,
         actualWorkMin: 27,
         volumeKg: 7350,
         cardioMin: 0,
@@ -3403,11 +3401,10 @@ var TRAINER_WORKOUTS = [
         id: 'torso-2',
         name: 'Torso 2',
         emoji: '🏋️',
-        totalMin: 90,
         actualWorkMin: 45,
         volumeKg: 7381,
         cardioMin: 30,
-        cardioLabel: 'Bici reclinada 30 min',
+        cardioLabel: 'Bici reclinada',
         exercises: ['Press militar', 'Peck deck', 'Remo barra', 'Pájaros', 'Elevaciones laterales', 'Curl alterno', 'Extensión tríceps un brazo']
     },
     {
@@ -3415,7 +3412,6 @@ var TRAINER_WORKOUTS = [
         name: 'Pierna 2',
         emoji: '🔥',
         isLeg: true,
-        totalMin: 90,
         actualWorkMin: 17,
         volumeKg: 9995,
         cardioMin: 0,
@@ -3473,20 +3469,15 @@ function getWorkoutDayHint() {
     return days[dow] + ' · rutina habitual';
 }
 
+function getTrainerSessionMin() {
+    return TRAINER_PROFILE.training.typicalSessionMin || 90;
+}
+
 function getTrainerWorkoutById(id) {
     for (var i = 0; i < TRAINER_WORKOUTS.length; i++) {
         if (TRAINER_WORKOUTS[i].id === id) return TRAINER_WORKOUTS[i];
     }
     return null;
-}
-
-function formatWorkoutDurationMeta(workout) {
-    if (!workout) return '';
-    var strengthMin = workout.totalMin - (workout.cardioMin || 0);
-    if (workout.cardioMin) {
-        return strengthMin + ' min pesas + ' + workout.cardioMin + ' min bici · ' + workout.totalMin + ' min total';
-    }
-    return workout.totalMin + ' min';
 }
 
 function getDefaultWorkoutForDay(d) {
@@ -3499,7 +3490,8 @@ function calculateWorkoutKcalBreakdown(workout, weight) {
     weight = weight || TRAINER_PROFILE.weight;
     var wFactor = weight / 70;
     var isLeg = !!workout.isLeg;
-    var strengthMin = workout.totalMin - (workout.cardioMin || 0);
+    var sessionMin = getTrainerSessionMin();
+    var strengthMin = sessionMin - (workout.cardioMin || 0);
     // Sesión completa (incl. descansos): Jefit marca pocos min "activos" en pierna por pausas largas
     var sessionMet = isLeg ? 5.2 : 4.5;
     var sessionKcal = sessionMet * weight * (strengthMin / 60);
@@ -3674,11 +3666,11 @@ function buildTrainerWorkoutPickerHtml() {
     return TRAINER_WORKOUTS.map(function(w) {
         var kcal = calculateWorkoutKcalBreakdown(w).total;
         var sel = trainerDailyLog.workoutId === w.id ? ' trainer-workout-selected' : '';
-        var meta = formatWorkoutDurationMeta(w);
+        var meta = '~' + kcal + ' kcal';
         var plannedTag = w.id === trainerDailyLog.plannedWorkoutId ? ' · previsto hoy' : '';
         return '<button type="button" class="trainer-workout-chip' + sel + '" data-trainer-workout="' + w.id + '">' +
             '<span class="trainer-workout-chip-name">' + w.emoji + ' ' + w.name + '</span>' +
-            '<span class="trainer-workout-chip-meta">' + meta + ' · ~' + kcal + ' kcal' + plannedTag + '</span>' +
+            '<span class="trainer-workout-chip-meta">' + meta + plannedTag + '</span>' +
         '</button>';
     }).join('');
 }
@@ -3692,7 +3684,7 @@ function renderTrainerWorkoutDaySection() {
 
     var plannedHtml;
     if (planned) {
-        var plannedMeta = formatWorkoutDurationMeta(planned);
+        var plannedMeta = getWorkoutDayHint() + ' · ~' + plannedKcal + ' kcal';
         var plannedCls = 'trainer-planned-workout';
         if (status === 'skipped') plannedCls += ' trainer-planned-skipped';
         if (status === 'done') plannedCls += ' trainer-planned-done';
@@ -3700,7 +3692,7 @@ function renderTrainerWorkoutDaySection() {
             '<div class="' + plannedCls + '">' +
                 '<span class="trainer-planned-label">Previsto hoy</span>' +
                 '<span class="trainer-planned-name">' + planned.emoji + ' ' + planned.name + '</span>' +
-                '<span class="trainer-planned-meta">' + getWorkoutDayHint() + ' · ' + plannedMeta + ' · ~' + plannedKcal + ' kcal</span>' +
+                '<span class="trainer-planned-meta">' + plannedMeta + '</span>' +
             '</div>';
     } else {
         plannedHtml =
@@ -3848,7 +3840,7 @@ function renderTrainerActivityPanel() {
                 '<h3>👟 Tu gasto de hoy</h3>' +
                 '<span class="trainer-activity-date" id="trainer-activity-date"></span>' +
             '</div>' +
-            '<p class="trainer-activity-profile">81,5 kg · 174 cm · 32 años · oficina 9–19h · ~10.000 pasos/día · ~90 min gym · sin alcohol</p>' +
+            '<p class="trainer-activity-profile">81,5 kg · 174 cm · 32 años · oficina 9–19h · ~10.000 pasos/día · sin alcohol</p>' +
             '<div class="trainer-activity-inputs">' +
                 '<div class="trainer-activity-field">' +
                     '<label for="trainer-steps-today">Pasos de hoy <span class="trainer-activity-hint">(Apple Health · hasta ahora)</span></label>' +
@@ -3885,11 +3877,10 @@ function updateTrainerEnergyUI() {
     if (r.trainDetail) {
         var bd = r.trainDetail.breakdown;
         var w = getTrainerWorkoutById(r.trainDetail.id);
-        var strengthMin = w.totalMin - (w.cardioMin || 0);
-        trainRows += '<div class="trainer-tdee-row"><span>🏋️ ' + r.trainDetail.name + ' · ' + w.totalMin + ' min</span><strong>+' + r.trainKcal + ' kcal</strong></div>';
+        trainRows += '<div class="trainer-tdee-row"><span>🏋️ ' + r.trainDetail.name + '</span><strong>+' + r.trainKcal + ' kcal</strong></div>';
         trainRows += '<div class="trainer-tdee-sub">' +
-            '<span>Pesas (' + strengthMin + ' min, incl. descansos)</span><span>+' + bd.session + ' kcal</span>' +
-            '<span>Series bajo carga (' + w.actualWorkMin + ' min)</span><span>+' + bd.intensity + ' kcal</span>' +
+            '<span>Pesas (sesión completa)</span><span>+' + bd.session + ' kcal</span>' +
+            '<span>Series bajo carga</span><span>+' + bd.intensity + ' kcal</span>' +
             (bd.cardio ? '<span>' + (w.cardioLabel || 'Cardio') + '</span><span>+' + bd.cardio + ' kcal</span>' : '') +
             '<span>Volumen (' + Math.round(w.volumeKg).toLocaleString('es-ES') + ' kg)</span><span>+' + bd.volume + ' kcal</span>' +
             (bd.epoc ? '<span>EPOC pierna (grupos grandes)</span><span>+' + bd.epoc + ' kcal</span>' : '') +
