@@ -6,7 +6,7 @@
     var GATE_HASH = 'd71409f5ab6d20ff93870f390b7377f8884eddd9f1f6416abd5b13968fa5679b';
     var GATE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
     var LONG_PRESS_MS = 700;
-    var TRIPLE_CLICK_MS = 900;
+    var TRIPLE_CLICK_MS = 1000;
 
     function bufferToHex(buf) {
         var arr = new Uint8Array(buf);
@@ -84,9 +84,9 @@
         var input = document.getElementById('site-gate-pin-input');
         var err = document.getElementById('site-gate-pin-error');
         if (!overlay || !input) return;
-        err.textContent = '';
+        if (err) err.textContent = '';
         input.value = '';
-        overlay.style.display = '';
+        overlay.style.display = 'flex';
         setTimeout(function() { input.focus(); }, 80);
     }
 
@@ -129,60 +129,74 @@
         });
     }
 
-    function bindLongPress(el, onLongPress) {
-        var timer = null;
-        var triggered = false;
-        function clear() {
-            if (timer) {
-                clearTimeout(timer);
-                timer = null;
+    function bindSecretTrigger(el) {
+        var longPressTimer = null;
+        var longPressFired = false;
+        var mouseClickCount = 0;
+        var mouseClickTimer = null;
+
+        function clearLongPress() {
+            if (longPressTimer) {
+                clearTimeout(longPressTimer);
+                longPressTimer = null;
             }
         }
-        el.addEventListener('touchstart', function() {
-            triggered = false;
-            clear();
-            timer = setTimeout(function() {
-                timer = null;
-                triggered = true;
-                onLongPress();
-            }, LONG_PRESS_MS);
-        }, { passive: true });
-        el.addEventListener('touchend', clear);
-        el.addEventListener('touchmove', clear);
-        el.addEventListener('touchcancel', clear);
-        el.addEventListener('click', function(e) {
-            if (triggered) {
-                e.preventDefault();
-                triggered = false;
-            }
-        });
-    }
 
-    function bindTripleClick(el, onTriple) {
-        var count = 0;
-        var resetTimer = null;
-        el.addEventListener('click', function(e) {
-            if (e.detail === 0) return;
-            count++;
-            if (resetTimer) clearTimeout(resetTimer);
-            if (count >= 3) {
-                count = 0;
-                e.preventDefault();
-                onTriple();
+        function resetMouseClicks() {
+            mouseClickCount = 0;
+            if (mouseClickTimer) {
+                clearTimeout(mouseClickTimer);
+                mouseClickTimer = null;
+            }
+        }
+
+        function registerMouseClick() {
+            mouseClickCount++;
+            if (mouseClickTimer) clearTimeout(mouseClickTimer);
+            if (mouseClickCount >= 3) {
+                resetMouseClicks();
+                showPinModal();
                 return;
             }
-            resetTimer = setTimeout(function() {
-                count = 0;
-                resetTimer = null;
-            }, TRIPLE_CLICK_MS);
-        });
-    }
-
-    function bindSecretTrigger(el) {
-        bindLongPress(el, showPinModal);
-        if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
-            bindTripleClick(el, showPinModal);
+            mouseClickTimer = setTimeout(resetMouseClicks, TRIPLE_CLICK_MS);
         }
+
+        // Móvil: pulsación larga
+        el.addEventListener('touchstart', function() {
+            longPressFired = false;
+            clearLongPress();
+            longPressTimer = setTimeout(function() {
+                longPressTimer = null;
+                longPressFired = true;
+                showPinModal();
+            }, LONG_PRESS_MS);
+        }, { passive: true });
+
+        el.addEventListener('touchend', clearLongPress);
+        el.addEventListener('touchmove', clearLongPress);
+        el.addEventListener('touchcancel', clearLongPress);
+
+        // PC: triple clic (detail=3 del navegador o 3 clics sueltos)
+        el.addEventListener('click', function(e) {
+            if (longPressFired) {
+                e.preventDefault();
+                longPressFired = false;
+                return;
+            }
+            // Evitar ghost click tras long press en táctil
+            if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return;
+
+            if (e.detail >= 3) {
+                resetMouseClicks();
+                e.preventDefault();
+                showPinModal();
+                return;
+            }
+
+            if (e.detail === 1) {
+                registerMouseClick();
+            }
+        });
     }
 
     function setupSiteGate(onUnlock) {
