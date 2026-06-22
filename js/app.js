@@ -3366,14 +3366,96 @@ var TRAINER_PROFILE = {
     typicalSteps: 10000,
     alcohol: 'none',
     training: {
-        type: 'strength',
         daysPerWeek: 4,
-        durationMin: 90,
-        intensity: 'high',
-        typicalGymDays: [1, 3, 5, 6] // lun, mié, vie, sáb (puede cambiar)
+        typicalGymDays: [1, 3, 5, 6], // lun, mié, vie, sáb (puede cambiar)
+        dayWorkoutMap: { 1: 'torso-1', 3: 'pierna-1', 5: 'torso-2', 6: 'pierna-2' }
     }
 };
-var trainerDailyLog = { date: '', steps: null, trainedToday: false };
+
+// Rutinas reales de Jefit (Pablo) — tiempos, volumen y bici para estimar kcal
+var TRAINER_WORKOUTS = [
+    {
+        id: 'torso-1',
+        name: 'Torso 1',
+        emoji: '💪',
+        totalMin: 84,
+        actualWorkMin: 57,
+        volumeKg: 11102,
+        cardioMin: 30,
+        cardioLabel: 'Bici reclinada 30 min',
+        exercises: ['Press inclinado Smith', 'Jalón un brazo', 'Press mancuernas', 'Jalón ancho', 'Curl barra', 'Extensión tríceps', 'Curl alterno', 'Pushdown cuerda']
+    },
+    {
+        id: 'pierna-1',
+        name: 'Pierna 1',
+        emoji: '🦵',
+        totalMin: 86,
+        actualWorkMin: 26,
+        volumeKg: 7350,
+        cardioMin: 0,
+        exercises: ['Crunch polea', 'Aducción cadera', 'Hack squat', 'Búlgaras Smith', 'Gemelos sentado', 'Zancadas mancuernas']
+    },
+    {
+        id: 'torso-2',
+        name: 'Torso 2',
+        emoji: '🏋️',
+        totalMin: 105,
+        actualWorkMin: 52,
+        volumeKg: 7381,
+        cardioMin: 30,
+        cardioLabel: 'Bici reclinada 30 min',
+        exercises: ['Press militar', 'Peck deck', 'Remo barra', 'Pájaros', 'Elevaciones laterales', 'Curl alterno', 'Extensión tríceps un brazo']
+    },
+    {
+        id: 'pierna-2',
+        name: 'Pierna 2',
+        emoji: '🔥',
+        totalMin: 99,
+        actualWorkMin: 19,
+        volumeKg: 9995,
+        cardioMin: 0,
+        exercises: ['Peso muerto rumano', 'Hip thrust', 'Prensa piernas', 'Extensión cuádriceps', 'Curl femoral', 'Crunch polea', 'Crunch declinado']
+    }
+];
+
+var trainerDailyLog = { date: '', steps: null, trainedToday: false, workoutId: null };
+
+function getTrainerWorkoutById(id) {
+    for (var i = 0; i < TRAINER_WORKOUTS.length; i++) {
+        if (TRAINER_WORKOUTS[i].id === id) return TRAINER_WORKOUTS[i];
+    }
+    return null;
+}
+
+function getDefaultWorkoutForDay(d) {
+    d = d || new Date();
+    var id = TRAINER_PROFILE.training.dayWorkoutMap[d.getDay()];
+    return id || null;
+}
+
+function calculateWorkoutKcalBreakdown(workout, weight) {
+    weight = weight || TRAINER_PROFILE.weight;
+    var wFactor = weight / 70;
+    // MET: series activas ~6, bici reclinada ~3.8, descansos/transiciones ~2.5, bonus volumen (EPOC)
+    var liftKcal = 6 * weight * (workout.actualWorkMin / 60);
+    var cardioKcal = workout.cardioMin ? (3.8 * weight * (workout.cardioMin / 60)) : 0;
+    var idleMin = Math.max(0, workout.totalMin - workout.actualWorkMin - (workout.cardioMin || 0));
+    var idleKcal = 2.5 * weight * (idleMin / 60);
+    var volumeKcal = workout.volumeKg * 0.011 * wFactor;
+    return {
+        lift: Math.round(liftKcal),
+        cardio: Math.round(cardioKcal),
+        idle: Math.round(idleKcal),
+        volume: Math.round(volumeKcal),
+        total: Math.round(liftKcal + cardioKcal + idleKcal + volumeKcal)
+    };
+}
+
+function getWorkoutKcal(workoutId) {
+    var workout = getTrainerWorkoutById(workoutId);
+    if (!workout) return null;
+    return calculateWorkoutKcalBreakdown(workout);
+}
 
 function isDefaultTrainerGymDay(d) {
     d = d || new Date();
@@ -3391,11 +3473,16 @@ function getTodayDateKey() {
 function ensureTrainerDailyLog() {
     var today = getTodayDateKey();
     if (trainerDailyLog.date !== today) {
+        var gymDay = isDefaultTrainerGymDay();
         trainerDailyLog = {
             date: today,
             steps: null,
-            trainedToday: isDefaultTrainerGymDay()
+            trainedToday: gymDay,
+            workoutId: gymDay ? getDefaultWorkoutForDay() : null
         };
+        saveTrainerPersonalState();
+    } else if (trainerDailyLog.trainedToday && !trainerDailyLog.workoutId) {
+        trainerDailyLog.workoutId = getDefaultWorkoutForDay();
         saveTrainerPersonalState();
     }
 }
@@ -3425,7 +3512,7 @@ function calculateTrainerBMR() {
         : (10 * p.weight) + (6.25 * p.height) - (5 * p.age) - 161;
 }
 
-function calculateTrainerTDEE(steps, trainedToday) {
+function calculateTrainerTDEE(steps, workoutId) {
     var bmr = calculateTrainerBMR();
     var neat = bmr * TRAINER_PROFILE.activityFactor;
     var stepsExtra = 0;
@@ -3433,16 +3520,25 @@ function calculateTrainerTDEE(steps, trainedToday) {
         stepsExtra = steps * 0.04 * (TRAINER_PROFILE.weight / 70);
     }
     var trainExtra = 0;
-    var t = TRAINER_PROFILE.training;
-    if (trainedToday) {
-        var idx = t.intensity === 'low' ? 0 : t.intensity === 'medium' ? 1 : 2;
-        trainExtra = trainBurnPerMin[t.type][idx] * t.durationMin;
+    var trainDetail = null;
+    if (workoutId) {
+        var breakdown = getWorkoutKcal(workoutId);
+        if (breakdown) {
+            trainExtra = breakdown.total;
+            var workout = getTrainerWorkoutById(workoutId);
+            trainDetail = {
+                id: workoutId,
+                name: workout.name,
+                breakdown: breakdown
+            };
+        }
     }
     return {
         bmr: Math.round(bmr),
         neat: Math.round(neat),
         stepsKcal: Math.round(stepsExtra),
         trainKcal: Math.round(trainExtra),
+        trainDetail: trainDetail,
         tdee: Math.round(neat + stepsExtra + trainExtra)
     };
 }
@@ -3460,7 +3556,8 @@ function getTrainerGoalLabel() {
 
 function getTrainerEnergySummary() {
     ensureTrainerDailyLog();
-    var result = calculateTrainerTDEE(trainerDailyLog.steps, trainerDailyLog.trainedToday);
+    var workoutId = trainerDailyLog.trainedToday ? trainerDailyLog.workoutId : null;
+    var result = calculateTrainerTDEE(trainerDailyLog.steps, workoutId);
     var targetKcal = Math.round(result.tdee * getTrainerGoalMultiplier());
     return { result: result, targetKcal: targetKcal };
 }
@@ -3522,22 +3619,38 @@ function renderTrainerActivityPanel() {
     ensureTrainerDailyLog();
     var stepsVal = trainerDailyLog.steps !== null ? trainerDailyLog.steps : '';
 
+    var workoutChips = TRAINER_WORKOUTS.map(function(w) {
+        var kcal = calculateWorkoutKcalBreakdown(w).total;
+        var sel = trainerDailyLog.workoutId === w.id ? ' trainer-workout-selected' : '';
+        var meta = w.actualWorkMin + ' min series';
+        if (w.cardioMin) meta += ' + ' + w.cardioMin + ' min bici';
+        return '<button type="button" class="trainer-workout-chip' + sel + '" data-trainer-workout="' + w.id + '">' +
+            '<span class="trainer-workout-chip-name">' + w.emoji + ' ' + w.name + '</span>' +
+            '<span class="trainer-workout-chip-meta">' + meta + ' · ~' + kcal + ' kcal</span>' +
+        '</button>';
+    }).join('');
+
     container.innerHTML =
         '<div class="trainer-activity-card">' +
             '<div class="trainer-activity-head">' +
                 '<h3>👟 Tu gasto de hoy</h3>' +
                 '<span class="trainer-activity-date" id="trainer-activity-date"></span>' +
             '</div>' +
-            '<p class="trainer-activity-profile">81,5 kg · 174 cm · 32 años · oficina sedentaria · ~10.000 pasos/día · sin alcohol · gym lun/mié/vie/sáb</p>' +
+            '<p class="trainer-activity-profile">81,5 kg · 174 cm · 32 años · oficina sedentaria · ~10.000 pasos/día · sin alcohol</p>' +
             '<div class="trainer-activity-inputs">' +
                 '<div class="trainer-activity-field">' +
                     '<label for="trainer-steps-today">Pasos de hoy <span class="trainer-activity-hint">(Apple Health)</span></label>' +
                     '<input type="number" id="trainer-steps-today" value="' + stepsVal + '" placeholder="Ej: 10000" min="0" max="50000" step="100">' +
                 '</div>' +
-                '<label class="trainer-activity-gym">' +
-                    '<input type="checkbox" id="trainer-trained-today"' + (trainerDailyLog.trainedToday ? ' checked' : '') + '>' +
-                    ' Entrené hoy (gym ~90 min, alta intensidad · habitual lun/mié/vie/sáb)' +
-                '</label>' +
+                '<div class="trainer-activity-field">' +
+                    '<span class="trainer-activity-field-label">Entreno de hoy <span class="trainer-activity-hint">(Jefit · lun/mié/vie/sáb habitual)</span></span>' +
+                    '<div class="trainer-workout-list" id="trainer-workout-list">' + workoutChips +
+                        '<button type="button" class="trainer-workout-chip trainer-workout-rest' + (!trainerDailyLog.trainedToday ? ' trainer-workout-selected' : '') + '" data-trainer-workout="rest">' +
+                            '<span class="trainer-workout-chip-name">😴 Descanso</span>' +
+                            '<span class="trainer-workout-chip-meta">No entrené hoy</span>' +
+                        '</button>' +
+                    '</div>' +
+                '</div>' +
             '</div>' +
             '<div class="trainer-tdee-breakdown" id="trainer-tdee-breakdown"></div>' +
             '<p class="trainer-activity-note" id="trainer-activity-note"></p>' +
@@ -3565,21 +3678,47 @@ function updateTrainerEnergyUI() {
         subtitle.textContent = 'Objetivo hoy: ~' + energy.targetKcal + ' kcal (' + getTrainerGoalLabel().toLowerCase() + ')';
     }
 
+    var trainRows = '';
+    if (r.trainDetail) {
+        var bd = r.trainDetail.breakdown;
+        var w = getTrainerWorkoutById(r.trainDetail.id);
+        trainRows += '<div class="trainer-tdee-row"><span>🏋️ ' + r.trainDetail.name + '</span><strong>+' + r.trainKcal + ' kcal</strong></div>';
+        trainRows += '<div class="trainer-tdee-sub">' +
+            '<span>Series activas (' + w.actualWorkMin + ' min)</span><span>+' + bd.lift + ' kcal</span>' +
+            (bd.cardio ? '<span>' + (w.cardioLabel || 'Cardio') + '</span><span>+' + bd.cardio + ' kcal</span>' : '') +
+            (bd.idle ? '<span>Descansos / transiciones</span><span>+' + bd.idle + ' kcal</span>' : '') +
+            '<span>Volumen (' + Math.round(w.volumeKg).toLocaleString('es-ES') + ' kg)</span><span>+' + bd.volume + ' kcal</span>' +
+        '</div>';
+    } else {
+        trainRows += '<div class="trainer-tdee-row trainer-tdee-muted"><span>🏋️ Gym hoy</span><strong>—</strong></div>';
+    }
+
     breakdown.innerHTML =
         '<div class="trainer-tdee-row"><span>🔥 Metabolismo basal</span><strong>' + r.bmr + ' kcal</strong></div>' +
         '<div class="trainer-tdee-row"><span>🪑 NEAT (oficina sedentaria)</span><strong>+' + neatExtra + ' kcal</strong></div>' +
         (hasSteps
             ? '<div class="trainer-tdee-row"><span>👟 Pasos de hoy (' + trainerDailyLog.steps.toLocaleString('es-ES') + ')</span><strong>+' + r.stepsKcal + ' kcal</strong></div>'
             : '<div class="trainer-tdee-row trainer-tdee-muted"><span>👟 Pasos de hoy</span><strong>—</strong></div>') +
-        (r.trainKcal > 0
-            ? '<div class="trainer-tdee-row"><span>🏋️ Gym hoy</span><strong>+' + r.trainKcal + ' kcal</strong></div>'
-            : '<div class="trainer-tdee-row trainer-tdee-muted"><span>🏋️ Gym hoy</span><strong>—</strong></div>') +
+        trainRows +
         '<div class="trainer-tdee-row trainer-tdee-total"><span>= TDEE de hoy</span><strong>' + r.tdee + ' kcal</strong></div>' +
         '<div class="trainer-tdee-row trainer-tdee-target"><span>🎯 Objetivo ' + getTrainerGoalLabel().toLowerCase() + ' (×' + getTrainerGoalMultiplier() + ')</span><strong>' + energy.targetKcal + ' kcal</strong></div>';
 
     if (note) {
-        note.textContent = hasSteps ? '' : 'Introduce los pasos de hoy desde el iPhone (día normal de oficina: ~10.000).';
-        note.style.display = hasSteps ? 'none' : '';
+        var noteParts = [];
+        if (!hasSteps) noteParts.push('Introduce los pasos de hoy desde el iPhone (día normal de oficina: ~10.000).');
+        if (!trainerDailyLog.trainedToday) noteParts.push('Selecciona tu rutina Jefit si entrenaste (o cambia si hiciste otra).');
+        note.textContent = noteParts.join(' ');
+        note.style.display = noteParts.length ? '' : 'none';
+    }
+
+    // Sync workout chip selection without full re-render
+    var list = document.getElementById('trainer-workout-list');
+    if (list) {
+        list.querySelectorAll('.trainer-workout-chip').forEach(function(chip) {
+            var id = chip.dataset.trainerWorkout;
+            var selected = id === 'rest' ? !trainerDailyLog.trainedToday : trainerDailyLog.workoutId === id;
+            chip.classList.toggle('trainer-workout-selected', selected);
+        });
     }
 }
 
@@ -4157,15 +4296,22 @@ document.getElementById('trainer-activity-panel').addEventListener('input', func
     }
 });
 
-document.getElementById('trainer-activity-panel').addEventListener('change', function(e) {
+document.getElementById('trainer-activity-panel').addEventListener('click', function(e) {
     if (!trainerModeActive) return;
-    if (e.target.id === 'trainer-trained-today') {
-        trainerDailyLog.trainedToday = e.target.checked;
-        trainerDailyLog.date = getTodayDateKey();
-        saveTrainerPersonalState();
-        updateTrainerEnergyUI();
-        renderTrainerNutrition();
+    var chip = e.target.closest('[data-trainer-workout]');
+    if (!chip) return;
+    var id = chip.dataset.trainerWorkout;
+    if (id === 'rest') {
+        trainerDailyLog.trainedToday = false;
+        trainerDailyLog.workoutId = null;
+    } else {
+        trainerDailyLog.trainedToday = true;
+        trainerDailyLog.workoutId = id;
     }
+    trainerDailyLog.date = getTodayDateKey();
+    saveTrainerPersonalState();
+    updateTrainerEnergyUI();
+    renderTrainerNutrition();
 });
 
 // Trainer tab switching

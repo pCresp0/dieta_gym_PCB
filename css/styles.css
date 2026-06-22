@@ -4175,7 +4175,8 @@ body {
     margin-bottom: 14px;
 }
 
-.trainer-activity-field label {
+.trainer-activity-field label,
+.trainer-activity-field-label {
     display: block;
     font-size: 0.78rem;
     font-weight: 600;
@@ -4212,6 +4213,71 @@ body {
     width: 16px;
     height: 16px;
     accent-color: var(--accent);
+}
+
+.trainer-workout-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.trainer-workout-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: rgba(255,255,255,0.03);
+    color: var(--text-secondary);
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color var(--transition), background var(--transition);
+}
+
+.trainer-workout-chip:hover {
+    background: rgba(255,255,255,0.06);
+    border-color: rgba(240,184,64,0.35);
+}
+
+.trainer-workout-chip.trainer-workout-selected {
+    border-color: var(--accent);
+    background: rgba(240,184,64,0.1);
+}
+
+.trainer-workout-chip-name {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.trainer-workout-chip-meta {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+}
+
+.trainer-workout-rest.trainer-workout-selected {
+    border-color: var(--border);
+    background: rgba(255,255,255,0.05);
+}
+
+.trainer-tdee-sub {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 2px 12px;
+    padding: 4px 0 8px 12px;
+    margin-bottom: 4px;
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    border-left: 2px solid rgba(240,184,64,0.25);
+}
+
+.trainer-tdee-sub span:nth-child(even) {
+    text-align: right;
+    color: var(--text-secondary);
 }
 
 .trainer-tdee-breakdown {
