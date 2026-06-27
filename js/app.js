@@ -110,11 +110,11 @@ var extrasNutr = { verduras:[25,2,4,0.3], aceite:[900,0,0,100], fruta:[80,0.5,20
 var EXTRAS_OIL_ML = 5; // 5ml aceite oliva por comida (según entrenador)
 
 var supplements = [
-    {icon:'💪',title:'Creatina',desc:'5g todos los días',tip:'La creatina monohidrato (3-5g/día) es el suplemento con más evidencia para mejorar fuerza y masa muscular (Kreider et al., ISSN 2017). Solo tiene sentido si entrenas fuerza.',requiresTraining:true},
-    {icon:'🐟',title:'Omega 3',desc:'2 pastillas/día (1 desayuno + 1 comida)',tip:'2-3g/día EPA+DHA. Beneficios cardiovasculares, antiinflamatorios y para la salud cognitiva en toda la población (Philpott et al., 2019; AHA 2019).'},
-    {icon:'🧲',title:'Magnesio',desc:'2 pastillas antes de dormir (300mg)',tip:'El 50% de la población no alcanza la ingesta diaria recomendada. 300mg/día mejora calidad del sueño y función muscular (DiNicolantonio et al., 2018).'},
-    {icon:'⚡',title:'Zinc',desc:'2 pastillas antes de dormir (30mg)',tip:'Apoya el sistema inmune y la recuperación. Deficiencia común en deportistas y en dietas restrictivas (Prasad, 2013). 30mg/día está dentro del rango seguro (<40mg UL).'},
-    {icon:'😴',title:'Melatonina',desc:'Opcional, para favorecer el descanso',tip:'0.5-3mg antes de dormir. Útil si tienes problemas para conciliar el sueño. La evidencia muestra que mejora la latencia del sueño (Ferracioli-Oda et al., 2013).'}
+    {icon:'💪',title:'Creatina',desc:'5g todos los días',tip:'<strong>¿Por qué?</strong> Mejora la resíntesis de ATP, la fuerza y el volumen celular intracelular.<br><br><strong>Evidencia:</strong> Es la ayuda ergogénica legal más validada para el rendimiento anaeróbico (Kreider et al., ISSN 2017).<br><br><strong>Dosis:</strong> 3 a 5g al día crónicos (o fase de carga de 0.3g/kg/día por 5-7 días).<br><br><strong>¿Días alternos?</strong> No, tomar todos los días de forma continuada.<br><br><em>(Solo tiene sentido si entrenas fuerza)</em>',requiresTraining:true},
+    {icon:'🐟',title:'Omega 3',desc:'2 pastillas/día (1 desayuno + 1 comida)',tip:'<strong>¿Por qué?</strong> Modula la membrana celular. Atenúa las agujetas (DOMS) y reduce el consumo miocárdico de oxígeno submáximo.<br><br><strong>Evidencia:</strong> Validado para la recuperación muscular y cardiovascular.<br><br><strong>Dosis:</strong> Altas cargas de 3200 mg/día (800 EPA / 2400 DHA) por 8 semanas.<br><br><strong>¿Días alternos?</strong> No, tomar todos los días.'},
+    {icon:'🧲',title:'Magnesio',desc:'2 pastillas antes de dormir (300mg)',tip:'<strong>¿Por qué?</strong> Cofactor clave: todo el ATP activo debe estar unido a un ion de magnesio para ser utilizado como energía. Atenúa el lactato y optimiza la calidad del sueño profundo.<br><br><strong>Evidencia:</strong> Los atletas requieren entre un 10% y 20% extra. Disminuye el daño oxidativo del ADN (Dominguez et al., 2025).<br><br><strong>Dosis:</strong> 300 a 500 mg/día en formas orgánicas (Citrato o Quelato, evitar el óxido).<br><br><strong>¿Días alternos?</strong> No, tomar todos los días.'},
+    {icon:'⚡',title:'Zinc',desc:'2 pastillas antes de dormir (30mg)',tip:'<strong>¿Por qué?</strong> Ayuda inmunitaria crucial.<br><br><strong>Evidencia:</strong> Fórmulas comerciales como el ZMA NO han demostrado científicamente eficacia para elevar hormonas anabólicas en personas sin deficiencia previa. Consumos crónicos >100mg/día son tóxicos y bajan el HDL.<br><br><strong>Dosis:</strong> 8mg/día (mujeres) a 11mg/día (hombres). 30mg entra en el límite seguro.<br><br><strong>¿Días alternos?</strong> No, pero evitar la sobre-suplementación.'},
+    {icon:'😴',title:'Melatonina',desc:'Opcional, para favorecer el descanso',tip:'<strong>¿Por qué?</strong> Hormona cronobiótica y potente antioxidante celular agudo. Limita la fuga de Creatina Quinasa (CK) reduciendo las agujetas (DOMS).<br><br><strong>Evidencia:</strong> Mejora de forma consistente el rendimiento de sprint anaeróbico al día siguiente y acelera la recuperación (Guo et al., 2026).<br><br><strong>Dosis:</strong> 6 a 10 mg pre-sueño.<br><br><strong>¿Días alternos?</strong> No es necesario diaria, usar noches previas o posteriores a entrenamientos extenuantes.'}
 ];
 
 // Protein category mapping: index → category (same order as lunchProteins/dinnerProteins)
@@ -585,7 +585,7 @@ function renderSupplements() {
         return !s.requiresTraining || trains;
     });
     var html = filtered.map(function(s) {
-        var tipHtml = s.tip ? '<button class="supp-tooltip-btn" data-supptip="'+s.title+'">?</button>' : '';
+        var tipHtml = s.tip ? '<button class="supp-tooltip-btn" data-supptip="'+s.title+'" aria-label="Información científica">ℹ️</button>' : '';
         return '<div class="supplement-card"><span class="supplement-icon">'+s.icon+'</span><div class="supplement-text"><strong>'+s.title+'</strong>'+s.desc+tipHtml+'</div></div>';
     }).join('');
     if (!trains) {
@@ -4418,7 +4418,8 @@ function renderTrainerContent() {
     // Suplementos (siempre visible, fuera de tabs)
     html += '<div class="trainer-section trainer-supplements-section"><h3>\ud83d\udc8a Suplementación</h3><div class="trainer-supps">';
     supplements.forEach(function(s) {
-        html += '<div class="trainer-supp">' + s.icon + ' <strong>' + s.title + '</strong> — ' + s.desc + '</div>';
+        var tipHtml = s.tip ? '<button class="supp-tooltip-btn" data-supptip="'+s.title+'" aria-label="Información científica">ℹ️</button>' : '';
+        html += '<div class="trainer-supp">' + s.icon + ' <strong>' + s.title + '</strong> — ' + s.desc + ' ' + tipHtml + '</div>';
     });
     html += '</div></div>';
 
