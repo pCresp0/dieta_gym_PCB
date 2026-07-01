@@ -3822,10 +3822,17 @@ function updateTrainerWorkoutDayUI() {
 }
 
 function getTrainerTabByTime() {
-    var h = new Date().getHours();
-    if (h >= 1 && h < 12) return 'breakfast';
-    if (h >= 12 && h < 18) return 'lunch';
-    return 'dinner'; // 18-24 or 0
+    var now = new Date();
+    var h = now.getHours();
+    var m = now.getMinutes();
+    var totalMin = h * 60 + m;
+
+    // Desayuno: 1:00 (60 min) a 12:15 (735 min)
+    if (totalMin >= 60 && totalMin <= 735) return 'breakfast';
+    // Comida: 12:16 (736 min) a 18:00 (1080 min)
+    if (totalMin >= 736 && totalMin <= 1080) return 'lunch';
+    // Cena: 18:01 (1081 min) a 1:00 (60 min del día siguiente)
+    return 'dinner';
 }
 
 var currentTrainerTab = getTrainerTabByTime();
